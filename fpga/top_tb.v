@@ -10,7 +10,8 @@
 module top_tb;
     localparam NVEC = 6057;
     localparam real CLK_NS = 83.334;
-    localparam [55:0] NOTICE = {8'h41, 8'd49, 8'd51, 16'd0, 16'd0};
+    // Restart notice: status 0xC1 = notice | LB 8 | type 0 | ok, quote 49/51.
+    localparam [55:0] NOTICE = {8'hC1, 8'd49, 8'd51, 16'd0, 16'd0};
 
     reg clk = 0;
     always #41.667 clk = ~clk;
@@ -133,7 +134,6 @@ module top_tb;
         bit_ns[1] = 8680.556;
         errors[0] = 0; errors[1] = 0; lat[0] = -1; lat[1] = -1;
         // Both designs announce themselves once after power-on:
-        // status 0x41 (accepted, cmd 0, LB = 8), quote 49/51, d = 0, seq = 0.
         check_reply(0, 8000, 1, 0, NOTICE);
         #(200 * 8680.556);                // let the 115200-baud link's notice finish too
         // (One after the other, not in parallel: the tasks above keep their
@@ -159,10 +159,43 @@ module top_tb;
         check_reply(0, 9006, 1, 0, NOTICE);
         transact(0, 9007, 8'd5, 16'd0, 8'h00, 1, {8'h4B, NOTICE[47:0]});
 
+        // KEY1 = kill switch: notice type 1, both sides pulled; again = back on.
+        // (The notice starts a few clocks after the press, so we must already
+        // be listening: press and listen run side by side.)
+        fork
+            begin key[1] = 0; #(20 * CLK_NS); key[1] = 1; end
+            check_reply(0, 9010, 1, 0, {8'hD3, 8'd0, 8'd0, 16'd0, 16'd0});
+        join
+        transact(0, 9011, 8'd1, 16'd8, 8'h00, 1, {8'h52, 8'd0, 8'd0, 16'd0, 16'd0});  // buy rejected
+        fork
+            begin key[1] = 0; #(20 * CLK_NS); key[1] = 1; end
+            check_reply(0, 9012, 1, 0, {8'hC3, NOTICE[47:0]});
+        join
+        // KEY3 = pause (type 2), KEY2 = resume (type 3).
+        fork
+            begin key[3] = 0; #(20 * CLK_NS); key[3] = 1; end
+            check_reply(0, 9013, 1, 0, {8'hC5, NOTICE[47:0]});
+        join
+        if (ledg_f[1] !== 1'b1) begin $display("FAIL: paused LED off"); errors[0] = errors[0] + 1; end
+        fork
+            begin key[2] = 0; #(20 * CLK_NS); key[2] = 1; end
+            check_reply(0, 9014, 1, 0, {8'hC7, NOTICE[47:0]});
+        join
+        if (ledg_f[1] !== 1'b0) begin $display("FAIL: paused LED on"); errors[0] = errors[0] + 1; end
+        // A button pressed just as a request is being sent: the notice goes
+        // out first, the request waits, and its reply follows. Nothing is lost.
+        fork
+            begin key[3] = 0; #(20 * CLK_NS); key[3] = 1; send_frame(0, 8'd1, 16'd8, 8'h00); end
+            begin
+                check_reply(0, 9015, 1, 0, {8'hC5, NOTICE[47:0]});
+                check_reply(0, 9016, 1, 0, {8'h43, 8'd50, 8'd52, 16'd8, 16'd1});
+            end
+        join
+
         for (j = 0; j < 60; j = j + 1)
             transact(1, j, vec[j][79:72], vec[j][71:56], 8'h00, 1, vec[j][55:0]);
         if (errors[0] + errors[1] != 0) $fatal(1, "%0d errors", errors[0] + errors[1]);
-        $display("PASS: fast link %0d vectors + 6 framing cases + KEY0 restart; 115200-baud link 60 vectors", NVEC);
+        $display("PASS: fast link %0d vectors + 6 framing cases + all four buttons; 115200-baud link 60 vectors", NVEC);
         $display("      latency field: %0d clocks (fast), %0d clocks (115200) on every reply", lat[0], lat[1]);
         $finish;
     end

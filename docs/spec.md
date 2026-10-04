@@ -142,6 +142,7 @@ Reply, MM to host, 13 bytes:
 
 - `status`: bit 0 = accepted, bits 3..1 = `cmd` echoed, bit 4 = `kill`,
   bits 6..5 = `LB - 6`, bit 7 = 0. All reflect the state after the request.
+  (Bit 7 = 1 marks a board-button notice, FPGA only: section 10.)
 - `seq`: low 16 bits of `fills`.
 - `latency`: see section 8. **Excluded from the bit-exact comparison**; every
   other byte must match across implementations.
@@ -207,15 +208,27 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
 - The FPGA UART is `/dev/cu.usbmodem2103`. The RP2040 bridge drops bytes when
   more than about 32 are in flight in both directions at once; the
   one-request-then-one-reply rule in section 6 stays far below that.
-- KEY0 restarts the market maker while held: `d = 0`, `fills = 0` and the
-  power-on config, exactly as after loading the bitstream.
-- **Restart notice (FPGA only):** when KEY0 is released, and once at power-on,
-  the board sends one reply frame unasked, with `cmd` = 0 in the status byte
-  (status `0x41`, quote 49/51, `d` = 0, `seq` = 0). No request has `cmd` = 0,
-  so the host can tell it apart. `exchange --demo` waits for it and then
-  replays the order stream; outside demo mode a notice in mid-run is an error.
-- On the board, switches and KEY3 will also drive config and kill (milestone
-  M6). How they combine with host CONFIG messages is decided then.
+- Build (with buttons): 1,546 logic cells, estimated maximum clock 49.3 MHz.
+- **Buttons** (FPGA only):
+
+  | Button | Effect on the board | Notice type |
+  |---|---|---|
+  | KEY0 | restart while held: `d = 0`, `fills = 0`, power-on config | 0, sent on release and at power-on |
+  | KEY1 | kill switch on/off (same `kill` bit CONFIG sets); LEDR0 shows it | 1 |
+  | KEY3 | asks the laptop to pause the order feed; LEDG1 lights | 2 |
+  | KEY2 | asks the laptop to resume; LEDG1 goes out | 3 |
+
+- **Notices:** each button press makes the board send one reply-format frame
+  unasked: status bit 7 = 1, the notice type in the `cmd` bits, bit 0 = 1, and
+  the current quote, `d` and `seq`. The restart notice is `0xC1` with quote
+  49/51. The latency field of a notice means nothing.
+- A notice and a reply never overlap on the wire. If a request arrives while a
+  notice is being sent it waits and is answered afterwards (its latency field
+  then includes the wait). This only happens when a button is pressed.
+- `exchange --demo` acts on notices (restart, pause, resume, kill). Outside
+  demo mode any notice during a run is an error, so benchmark runs cannot be
+  silently disturbed by a button.
+- The slide switches do nothing yet (milestone M6).
 
 ## 11. Order-flow file
 

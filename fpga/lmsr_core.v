@@ -38,12 +38,19 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
 );
     localparam CMD_BUY = 8'd1, CMD_SELL = 8'd2, CMD_CONFIG = 8'd3,
                CMD_RESET = 8'd4, CMD_QUERY = 8'd5;
+    // Board-button events. They come from top.v, never from the serial port
+    // (frame_rx only lets commands 1-5 through). Each produces a "notice":
+    // a reply with status bit 7 set, carrying the current quote.
+    localparam EVT_KILL = 8'h81,      // toggle the kill switch
+               EVT_PAUSE = 8'h82,     // ask the laptop to pause the order feed
+               EVT_RESUME = 8'h83;    // ask the laptop to resume it
 
     localparam S_IDLE = 3'd0, S_RD_M = 3'd1, S_RD_0 = 3'd2, S_RD_P = 3'd3,
                S_GET_P = 3'd4, S_DIFF = 3'd5, S_ROUND = 3'd6;
     reg [2:0] state;
     reg       ok_r;        // was the request accepted
     reg [2:0] cmd_r;
+    reg       notice_r;    // this reply is a notice (nobody asked for it)
 
     assign busy = (state != S_IDLE);
 
@@ -109,10 +116,11 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
         resp_valid <= 1'b0;
         if (rst) begin
             // Work out the very first quote and send it unasked, as a
-            // "restart notice": a reply with cmd = 0, which no request has.
-            state  <= S_RD_M;
-            cmd_r  <= 3'd0;
-            ok_r   <= 1'b1;
+            // "restart notice" (notice type 0).
+            state    <= S_RD_M;
+            cmd_r    <= 3'd0;
+            ok_r     <= 1'b1;
+            notice_r <= 1'b1;
             d      <= 16'sd0;
             fills  <= 32'd0;
             lbm6   <= 2'd2;           // b = 256
@@ -124,8 +132,9 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
             status <= 8'd0;
         end else case (state)
             S_IDLE: if (req_valid) begin
-                cmd_r <= cmd[2:0];
-                ok_r  <= 1'b0;
+                cmd_r    <= cmd[2:0];
+                notice_r <= cmd[7];
+                ok_r     <= 1'b0;
                 case (cmd)
                     CMD_BUY: if (ask_px != 0 && qty_ok) begin
                         d     <= d + $signed(arg);
@@ -149,6 +158,11 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
                         fills <= 32'd0;
                         ok_r  <= 1'b1;
                     end
+                    EVT_KILL: begin
+                        kill <= ~kill;
+                        ok_r <= 1'b1;
+                    end
+                    EVT_PAUSE, EVT_RESUME: ok_r <= 1'b1;
                     default: ok_r <= (cmd == CMD_QUERY);
                 endcase
                 state <= S_RD_M;
@@ -165,7 +179,7 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
             S_ROUND: begin
                 ask_px     <= ask_live ? ask_c[6:0] : 7'd0;
                 bid_px     <= bid_live ? bid_c[6:0] : 7'd0;
-                status     <= {1'b0, lbm6, kill, cmd_r, ok_r};
+                status     <= {notice_r, lbm6, kill, cmd_r, ok_r};
                 resp_valid <= 1'b1;
                 state      <= S_IDLE;
             end

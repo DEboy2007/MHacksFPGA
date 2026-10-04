@@ -35,8 +35,8 @@ module lmsr_core_tb;
         rst <= 0;
         @(posedge clk);
         while (!resp_valid) @(posedge clk); // the restart notice, sent unasked
-        if (status !== 8'h41 || bid_px !== 7'd49 || ask_px !== 7'd51) begin
-            $display("FAIL: restart notice is status %h quote %0d/%0d, expected 41 49/51",
+        if (status !== 8'hC1 || bid_px !== 7'd49 || ask_px !== 7'd51) begin
+            $display("FAIL: restart notice is status %h quote %0d/%0d, expected C1 49/51",
                      status, bid_px, ask_px);
             errors = errors + 1;
         end
