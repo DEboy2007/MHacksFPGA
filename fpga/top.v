@@ -4,6 +4,7 @@
 //
 // HEX7-6: bid, HEX5-4: ask (hex for now, 00 = pulled), HEX3-0: accepted fills.
 // LEDR[0]: kill switch active. LEDG[0]: reply being sent.
+// KEY0: restart (same as power-on: d = 0, fills = 0, default config).
 module top #(
     parameter CLKS_PER_BIT = 104,       // 12 MHz / 115200 baud
     parameter TIMEOUT      = 120000,    // 10 ms
@@ -11,13 +12,20 @@ module top #(
 ) (
     input  wire       CLOCK_12,
     inout  wire [1:0] PICO,             // PICO[0] = serial in, PICO[1] = serial out
+    input  wire [3:0] KEY,              // push buttons, 0 = pressed
     output wire [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7,
     output wire [6:0] LEDR,
     output wire [3:0] LEDG
 );
     wire clk = CLOCK_12;
-    wire rst;
-    por por_i (.clk(clk), .rst(rst));
+    wire por_rst;
+    por por_i (.clk(clk), .rst(por_rst));
+
+    // KEY0 restarts everything while held. The button is not in step with the
+    // clock, so it goes through two flip-flops before anything uses it.
+    reg [1:0] key0_sync = 2'b00;
+    always @(posedge clk) key0_sync <= {key0_sync[0], ~KEY[0]};
+    wire rst = por_rst | key0_sync[1];
 
     // ---- bytes in -> request ----
     wire [7:0] rx_data;

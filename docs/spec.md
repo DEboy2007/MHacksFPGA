@@ -149,7 +149,8 @@ Reply, MM to host, 13 bytes:
 - Framing: the receiver waits for `0xA5`, then takes the next 4 bytes. If more
   than 10 ms pass between bytes of a frame it goes back to waiting for `0xA5`.
   The host sends one request, then waits for the reply (or a timeout) before
-  sending the next.
+  sending the next. (The 10 ms rule is for the UART; the C++ and Python
+  market makers read from a pipe, which cannot lose bytes, and skip it.)
 
 One round trip is 18 bytes, about 1.6 ms at 115200 baud, so the link carries
 roughly 600 requests per second.
@@ -206,5 +207,47 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
 - The FPGA UART is `/dev/cu.usbmodem2103`. The RP2040 bridge drops bytes when
   more than about 32 are in flight in both directions at once; the
   one-request-then-one-reply rule in section 6 stays far below that.
+- KEY0 restarts the market maker while held: `d = 0`, `fills = 0` and the
+  power-on config, exactly as after loading the bitstream. No reply is sent.
 - On the board, switches and KEY3 will also drive config and kill (milestone
   M6). How they combine with host CONFIG messages is decided then.
+
+## 11. Order-flow file
+
+Written by `gen/gen`, replayed by `exchange/exchange` into every market maker,
+so all three see the same stream. Little-endian.
+
+Header, 32 bytes:
+
+| Offset | Size | Field |
+|---|---|---|
+| 0 | 4 | magic `LMEV` |
+| 4 | 2 | version = 1 |
+| 6 | 2 | CONFIG `arg` the exchange sends first (`LB`, `LS`, `hs`) |
+| 8 | 4 | number of events |
+| 12 | 8 | seed |
+| 20 | 2 | `p0`: true probability before the news, in 1/100 cent (0..10000) |
+| 22 | 2 | `p1`: true probability after the news |
+| 24 | 4 | event index of the news, `0xFFFFFFFF` = none |
+| 28 | 1 | outcome: 1 = YES happens (drawn from the final truth) |
+| 29 | 3 | zero |
+
+Event, 8 bytes: one trader arriving.
+
+| Offset | Size | Field |
+|---|---|---|
+| 0 | 1 | 1 = informed, 0 = noise |
+| 1 | 1 | noise only: 1 = wants to buy YES, 2 = wants to sell |
+| 2 | 2 | `qty` (noise: 1..s, informed: s) |
+| 4 | 2 | truth at this moment, in 1/100 cent |
+| 6 | 2 | zero |
+
+What the exchange does with an event, given the current quote:
+
+- **Noise:** trades `qty` on its side if that side is live, otherwise nothing.
+- **Informed:** buys if the ask is live and `ask * 100 < truth`; otherwise
+  sells if the bid is live and `bid * 100 > truth`; otherwise nothing.
+
+The exchange starts every run with CONFIG then RESET. The recorded quote
+stream begins with the RESET reply, so it does not depend on what the market
+maker was doing beforehand.

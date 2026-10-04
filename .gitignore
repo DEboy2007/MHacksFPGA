@@ -3,3 +3,7 @@ __pycache__/
 .DS_Store
 fpga/_build/
 *.vcd
+out/
+gen/gen
+exchange/exchange
+mm_cpp/mm_cpp

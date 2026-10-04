@@ -109,10 +109,11 @@ class LmsrMM:
         """Bytes in, bytes out (or None if the frame is dropped)."""
         req = decode_request(frame)
         resp = req and self.handle(*req)
-        if not resp:
-            return None
-        status, bid_px, ask_px, d, seq = resp
-        body = bytes([SYNC_OUT, status, bid_px, ask_px]) \
-            + (d & 0xFFFF).to_bytes(2, "little") + seq.to_bytes(2, "little") \
-            + (latency & 0xFFFFFFFF).to_bytes(4, "little")
-        return body + bytes([xor8(body)])
+        return encode_reply(resp, latency) if resp else None
+
+def encode_reply(resp, latency=0):
+    status, bid_px, ask_px, d, seq = resp
+    body = bytes([SYNC_OUT, status, bid_px, ask_px]) \
+        + (d & 0xFFFF).to_bytes(2, "little") + seq.to_bytes(2, "little") \
+        + min(latency, 0xFFFFFFFF).to_bytes(4, "little")
+    return body + bytes([xor8(body)])

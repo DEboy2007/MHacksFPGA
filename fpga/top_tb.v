@@ -20,8 +20,20 @@ module top_tb;
     assign pico_r[0] = host_tx[1];
     wire [1:0] dut_tx = {pico_r[1], pico_f[1]};
 
-    top #(.CLKS_PER_BIT(8), .TIMEOUT(400)) dut_fast (.CLOCK_12(clk), .PICO(pico_f));
-    top                                    dut_real (.CLOCK_12(clk), .PICO(pico_r));
+    reg [3:0] key = 4'b1111;              // buttons are 0 when pressed
+    wire [6:0] hex_f [0:7], hex_r [0:7];
+    wire [6:0] ledr_f, ledr_r;
+    wire [3:0] ledg_f, ledg_r;
+    top #(.CLKS_PER_BIT(8), .TIMEOUT(400)) dut_fast
+        (.CLOCK_12(clk), .PICO(pico_f), .KEY(key),
+         .HEX0(hex_f[0]), .HEX1(hex_f[1]), .HEX2(hex_f[2]), .HEX3(hex_f[3]),
+         .HEX4(hex_f[4]), .HEX5(hex_f[5]), .HEX6(hex_f[6]), .HEX7(hex_f[7]),
+         .LEDR(ledr_f), .LEDG(ledg_f));
+    top dut_real
+        (.CLOCK_12(clk), .PICO(pico_r), .KEY(4'b1111),
+         .HEX0(hex_r[0]), .HEX1(hex_r[1]), .HEX2(hex_r[2]), .HEX3(hex_r[3]),
+         .HEX4(hex_r[4]), .HEX5(hex_r[5]), .HEX6(hex_r[6]), .HEX7(hex_r[7]),
+         .LEDR(ledr_r), .LEDG(ledg_r));
 
     real bit_ns [0:1];
 
@@ -128,10 +140,14 @@ module top_tb;
         #(500 * CLK_NS);                                     // ...then a pause > TIMEOUT
         transact(0, 9005, 8'd5, 16'd0, 8'h00, 1, last);     // must resync
 
+        // KEY0 restarts: afterwards the state is the power-on one (49/51, d=0).
+        key[0] = 0; #(50 * CLK_NS); key[0] = 1; #(50 * CLK_NS);
+        transact(0, 9006, 8'd5, 16'd0, 8'h00, 1, {8'h4B, 8'd49, 8'd51, 16'd0, 16'd0});
+
         for (j = 0; j < 60; j = j + 1)
             transact(1, j, vec[j][79:72], vec[j][71:56], 8'h00, 1, vec[j][55:0]);
         if (errors[0] + errors[1] != 0) $fatal(1, "%0d errors", errors[0] + errors[1]);
-        $display("PASS: fast link %0d vectors + 6 framing cases; 115200-baud link 60 vectors", NVEC);
+        $display("PASS: fast link %0d vectors + 6 framing cases + KEY0 restart; 115200-baud link 60 vectors", NVEC);
         $display("      latency field: %0d clocks (fast), %0d clocks (115200) on every reply", lat[0], lat[1]);
         $finish;
     end
