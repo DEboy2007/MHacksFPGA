@@ -208,7 +208,12 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
   more than about 32 are in flight in both directions at once; the
   one-request-then-one-reply rule in section 6 stays far below that.
 - KEY0 restarts the market maker while held: `d = 0`, `fills = 0` and the
-  power-on config, exactly as after loading the bitstream. No reply is sent.
+  power-on config, exactly as after loading the bitstream.
+- **Restart notice (FPGA only):** when KEY0 is released, and once at power-on,
+  the board sends one reply frame unasked, with `cmd` = 0 in the status byte
+  (status `0x41`, quote 49/51, `d` = 0, `seq` = 0). No request has `cmd` = 0,
+  so the host can tell it apart. `exchange --demo` waits for it and then
+  replays the order stream; outside demo mode a notice in mid-run is an error.
 - On the board, switches and KEY3 will also drive config and kill (milestone
   M6). How they combine with host CONFIG messages is decided then.
 

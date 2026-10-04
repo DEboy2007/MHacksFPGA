@@ -12,6 +12,10 @@
 //
 //   exchange --events ev.bin --mm serial:/dev/cu.usbmodem2103
 //   exchange --events ev.bin --mm "cmd:mm_cpp/mm_cpp" --rate 400
+//
+// --demo (FPGA only): wait for KEY0 on the board, replay the stream at a pace
+// you can watch on the hex displays, then wait for KEY0 again. Pressing KEY0
+// in the middle of a run starts it over.
 #include <cerrno>
 #include <cstdint>
 #include <cstdio>
@@ -61,6 +65,11 @@ public:
             p += r; n -= static_cast<size_t>(r);
         }
         return true;
+    }
+    // Throw away whatever is waiting, until the line has been quiet for 50 ms.
+    void drain() {
+        uint8_t junk[64];
+        while (read_exact(junk, 1, 50)) {}
     }
 protected:
     int rfd = -1, wfd = -1;
@@ -123,6 +132,10 @@ struct Quote {
     uint64_t rt_ns = 0;             // round trip measured here
 };
 
+// Thrown in --demo mode when the board was restarted (KEY0) during a run.
+// `notice_seen` is false if we only know because the board stopped answering.
+struct Restarted { bool notice_seen; };
+
 class Session {
 public:
     Session(Transport& t, FILE* quotes, double rate) : tr(t), qf(quotes) {
@@ -140,12 +153,19 @@ public:
         uint8_t in[13];
         const uint64_t t0 = now_ns();
         tr.write_all(out, sizeof out);
-        if (!tr.read_exact(in, sizeof in, 2000)) die("no reply from market maker (request " + std::to_string(count) + ")");
+        if (!tr.read_exact(in, sizeof in, demo ? 500 : 2000)) {
+            if (demo) throw Restarted{false};          // KEY0 is being held down
+            die("no reply from market maker (request " + std::to_string(count) + ")");
+        }
         Quote q;
         q.rt_ns = now_ns() - t0;
         uint8_t x = 0;
         for (uint8_t b : in) x ^= b;
         if (in[0] != 0x5A || x != 0) die("corrupt reply (request " + std::to_string(count) + ")");
+        if (is_notice(in)) {
+            if (demo) throw Restarted{true};
+            die("the board was restarted (KEY0) during the run");
+        }
         if (qf && record) fwrite(in, 1, 8, qf);
         q.status = in[1]; q.bid = in[2]; q.ask = in[3];
         q.d = static_cast<int16_t>(in[4] | (in[5] << 8));
@@ -154,8 +174,26 @@ public:
         ++count;
         return q;
     }
+    // A restart notice is a reply with cmd = 0: the board sends one, unasked,
+    // when KEY0 is released (and at power-on).
+    static bool is_notice(const uint8_t* in) { return ((in[1] >> 1) & 7) == 0; }
+
+    // Block until the board sends a restart notice.
+    void wait_for_notice() {
+        uint8_t in[13];
+        for (;;) {
+            if (!tr.read_exact(in, 1, 1000) || in[0] != 0x5A) continue;
+            if (!tr.read_exact(in + 1, 12, 200)) continue;
+            uint8_t x = 0;
+            for (uint8_t b : in) x ^= b;
+            if (x == 0 && is_notice(in)) return;
+        }
+    }
+    void set_rate(double rate) { gap_ns = rate > 0 ? static_cast<uint64_t>(1e9 / rate) : 0; }
+
     uint64_t count = 0;
     bool record = true;
+    bool demo = false;
 private:
     Transport& tr;
     FILE* qf;
@@ -199,36 +237,10 @@ static EventFile load_events(const std::string& path) {
     return ef;
 }
 
-// ---- main ----------------------------------------------------------------------
+// ---- one replay ------------------------------------------------------------
 
-int main(int argc, char** argv) {
-    std::string events_path, mm, quotes_path, log_path;
-    double rate = 0;
-    for (int i = 1; i + 1 < argc; i += 2) {
-        std::string a = argv[i], v = argv[i + 1];
-        if      (a == "--events") events_path = v;
-        else if (a == "--mm")     mm = v;
-        else if (a == "--quotes") quotes_path = v;
-        else if (a == "--log")    log_path = v;
-        else if (a == "--rate")   rate = atof(v.c_str());
-        else die("unknown option " + a);
-    }
-    if (events_path.empty() || mm.empty())
-        die("usage: exchange --events FILE --mm serial:PORT|cmd:COMMAND [--quotes FILE] [--log FILE] [--rate REQ_PER_SEC]");
-    signal(SIGPIPE, SIG_IGN);
-
-    const EventFile ef = load_events(events_path);
-    std::unique_ptr<Transport> tr;
-    if (mm.rfind("serial:", 0) == 0)   tr = std::make_unique<SerialTransport>(mm.substr(7));
-    else if (mm.rfind("cmd:", 0) == 0) tr = std::make_unique<ChildTransport>(mm.substr(4));
-    else die("--mm must start with serial: or cmd:");
-
-    FILE* qf = quotes_path.empty() ? nullptr : fopen(quotes_path.c_str(), "wb");
-    FILE* lf = log_path.empty() ? nullptr : fopen(log_path.c_str(), "w");
-    if ((!quotes_path.empty() && !qf) || (!log_path.empty() && !lf)) die("cannot open output file");
-    if (lf) fprintf(lf, "event,informed,action,qty,px,bid,ask,d,seq,mm_latency,rt_ns,truth_bp,cash,mtm\n");
-
-    Session ses(*tr, qf, rate);
+// Replay the whole event file once.
+static void run(Session& ses, const EventFile& ef, FILE* lf, bool show) {
     // The reply to CONFIG still reflects whatever the market maker was doing
     // before we connected, so it is left out of the recorded quote stream.
     ses.record = false;
@@ -269,14 +281,16 @@ int main(int argc, char** argv) {
         if (q.bid && q.ask) mark = (q.bid + q.ask) / 2.0;
         else if (q.bid)     mark = q.bid;
         else if (q.ask)     mark = q.ask;
+        if (show && action)
+            printf("#%-5zu %-8s %s %3d @ %2dc  ->  bid %2d  ask %2d  inventory %5d  fills %u\n",
+                   i, e.informed ? "informed" : "noise", action == 1 ? "buys " : "sells", e.qty, px,
+                   q.bid, q.ask, -q.d, q.seq);
         if (lf) fprintf(lf, "%zu,%d,%d,%d,%d,%d,%d,%d,%u,%u,%llu,%d,%lld,%.1f\n",
                         i, e.informed, action, action ? e.qty : 0, px, q.bid, q.ask, q.d, q.seq,
                         action ? q.latency : 0u, action ? static_cast<unsigned long long>(q.rt_ns) : 0ull,
                         e.truth_bp, cash, cash - q.d * mark);
     }
     const double secs = (now_ns() - t_start) / 1e9;
-    if (qf) fclose(qf);
-    if (lf) fclose(lf);
 
     const double truth = ef.events.empty() ? 50 : ef.events.back().truth_bp / 100.0;
     printf("events %zu, fills %lu (%lu informed), %.2f s, %.0f requests/s\n",
@@ -285,5 +299,66 @@ int main(int argc, char** argv) {
     printf("P&L in dollars: marked at own mid %.2f | at true probability %.2f | at resolution (%s) %.2f\n",
            (cash - q.d * mark) / 100.0, (cash - q.d * truth) / 100.0,
            ef.outcome_yes ? "YES" : "NO", (cash - (ef.outcome_yes ? 100LL * q.d : 0)) / 100.0);
+}
+
+// ---- main ----------------------------------------------------------------------
+
+int main(int argc, char** argv) {
+    std::string events_path, mm, quotes_path, log_path;
+    double rate = 0;
+    bool demo = false;
+    for (int i = 1; i < argc; i += 2) {
+        std::string a = argv[i];
+        if (a == "--demo") { demo = true; i--; continue; }
+        if (i + 1 >= argc) die("missing value for " + a);
+        std::string v = argv[i + 1];
+        if      (a == "--events") events_path = v;
+        else if (a == "--mm")     mm = v;
+        else if (a == "--quotes") quotes_path = v;
+        else if (a == "--log")    log_path = v;
+        else if (a == "--rate")   rate = atof(v.c_str());
+        else die("unknown option " + a);
+    }
+    if (events_path.empty() || mm.empty())
+        die("usage: exchange --events FILE --mm serial:PORT|cmd:COMMAND [--quotes FILE] [--log FILE] [--rate REQ_PER_SEC] [--demo]");
+    signal(SIGPIPE, SIG_IGN);
+
+    const EventFile ef = load_events(events_path);
+    std::unique_ptr<Transport> tr;
+    if (mm.rfind("serial:", 0) == 0)   tr = std::make_unique<SerialTransport>(mm.substr(7));
+    else if (mm.rfind("cmd:", 0) == 0) tr = std::make_unique<ChildTransport>(mm.substr(4));
+    else die("--mm must start with serial: or cmd:");
+
+    FILE* qf = quotes_path.empty() ? nullptr : fopen(quotes_path.c_str(), "wb");
+    FILE* lf = log_path.empty() ? nullptr : fopen(log_path.c_str(), "w");
+    if ((!quotes_path.empty() && !qf) || (!log_path.empty() && !lf)) die("cannot open output file");
+    if (lf) fprintf(lf, "event,informed,action,qty,px,bid,ask,d,seq,mm_latency,rt_ns,truth_bp,cash,mtm\n");
+
+    Session ses(*tr, qf, rate);
+    if (!demo) {
+        run(ses, ef, lf, false);
+    } else {
+        ses.demo = true;
+        ses.set_rate(rate > 0 ? rate : 20);
+        bool notice_seen = false;
+        for (;;) {
+            if (!notice_seen) {
+                printf("\nPress KEY0 on the board to start the run.\n");
+                fflush(stdout);
+                ses.wait_for_notice();
+            }
+            tr->drain();
+            printf("KEY0 pressed: replaying %zu events\n", ef.events.size());
+            try {
+                run(ses, ef, nullptr, true);
+                notice_seen = false;
+            } catch (const Restarted& r) {
+                printf("\n-- restarted from the board --\n");
+                notice_seen = r.notice_seen;
+            }
+        }
+    }
+    if (qf) fclose(qf);
+    if (lf) fclose(lf);
     return 0;
 }

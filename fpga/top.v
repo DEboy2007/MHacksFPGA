@@ -4,7 +4,8 @@
 //
 // HEX7-6: bid, HEX5-4: ask (hex for now, 00 = pulled), HEX3-0: accepted fills.
 // LEDR[0]: kill switch active. LEDG[0]: reply being sent.
-// KEY0: restart (same as power-on: d = 0, fills = 0, default config).
+// KEY0: restart (same as power-on: d = 0, fills = 0, default config). On
+// release the board sends a restart notice, which the laptop can act on.
 module top #(
     parameter CLKS_PER_BIT = 104,       // 12 MHz / 115200 baud
     parameter TIMEOUT      = 120000,    // 10 ms

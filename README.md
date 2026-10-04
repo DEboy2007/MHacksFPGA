@@ -16,5 +16,6 @@ All three produce identical quotes for the same order stream.
     fpga/run_tests.sh         # Verilog testbenches (Icarus Verilog)
     cd fpga && apio upload    # build and flash the market maker
     python3 tools/replay.py   # golden vectors against the board (--cmd mm_cpp/mm_cpp for software)
+    make demo                 # then press KEY0: replays a fixed order stream you can watch (RATE=10 trades/s)
 
-The FPGA's serial port is `/dev/cu.usbmodem2103`. KEY0 on the board restarts the market maker.
+The FPGA's serial port is `/dev/cu.usbmodem2103`. KEY0 on the board restarts the market maker; with `make demo` running, it restarts the whole run.
