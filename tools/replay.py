@@ -67,20 +67,25 @@ def main():
     errors = 0
     s = ChildLink(args.cmd) if args.cmd else SerialLink(args.port)
     t0 = time.time()
-    for i, (cmd, arg) in enumerate(preamble + vectors):
+    # The preamble's replies depend on what the board was doing before, so
+    # they are not compared.
+    for cmd, arg in preamble:
+        s.write(encode_request(cmd, arg))
+        s.read(OUT_LEN)
+    for i, (cmd, arg) in enumerate(vectors):
         s.write(encode_request(cmd, arg))
         got = s.read(OUT_LEN)
         want = mm.handle_frame(encode_request(cmd, arg))
         if len(got) != OUT_LEN or xor8(got) != 0 or got[:8] != want[:8]:
             errors += 1
-            print(f"MISMATCH #{i - len(preamble)} cmd={cmd} arg={arg}: got {got.hex()} want {want[:8].hex()}")
+            print(f"MISMATCH #{i} cmd={cmd} arg={arg}: got {got.hex()} want {want[:8].hex()}")
             if errors >= 10:
                 break
         else:
             lat[int.from_bytes(got[8:12], "little")] += 1
     dt = time.time() - t0
     n = len(vectors)
-    print(f"{n} vectors in {dt:.1f} s ({(n + 2) / dt:.0f} round trips/s), {errors} mismatches")
+    print(f"{n} vectors in {dt:.1f} s ({n / dt:.0f} round trips/s), {errors} mismatches")
     if s.unit == "clocks":
         for cycles, count in sorted(lat.items()):
             print(f"  latency {cycles} clocks = {cycles * CLK_NS:.0f} ns: {count} replies")
