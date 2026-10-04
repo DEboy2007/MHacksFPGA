@@ -148,13 +148,17 @@ module top_tb;
         last = {8'h4B, vec[NVEC-1][47:0]};
         transact(0, 9000, 8'd5, 16'd0, 8'h00, 1, last);
         transact(0, 9001, 8'd1, 16'd8, 8'h01, 0, 56'd0);    // bad checksum
-        transact(0, 9002, 8'd6, 16'd0, 8'h00, 0, 56'd0);    // unknown command
+        transact(0, 9002, 8'd7, 16'd0, 8'h00, 0, 56'd0);    // unknown command
         transact(0, 9003, 8'd0, 16'd0, 8'h00, 0, 56'd0);    // unknown command
         send_byte(0, 8'h33);                                 // junk before a frame
         transact(0, 9004, 8'd5, 16'd0, 8'h00, 1, last);
         send_byte(0, 8'hA5); send_byte(0, 8'h01);            // frame cut short...
         #(500 * CLK_NS);                                     // ...then a pause > TIMEOUT
         transact(0, 9005, 8'd5, 16'd0, 8'h00, 1, last);     // must resync
+        transact(0, 9008, 8'd6, 16'd60, 8'h00, 1,
+                 {8'h4D, 8'd0, 8'd0, vec[NVEC-1][31:0]});
+        transact(0, 9009, 8'd5, 16'd0, 8'h00, 1,
+                 {8'h4B, 8'd0, 8'd0, vec[NVEC-1][31:0]});
 
         // KEY0 restarts: on release the design sends a restart notice, and
         // the state is the power-on one (49/51, d=0).

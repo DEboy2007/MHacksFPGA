@@ -2,6 +2,7 @@
 // FPGA core (fpga/lmsr_core.v) and the Python golden model (golden/lmsr_mm.py).
 #pragma once
 #include <cstdint>
+#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -17,7 +18,7 @@ constexpr int64_t LIN = 100LL << (F - LOG2N);
 constexpr int64_t ONE = 1LL << F;
 
 constexpr uint8_t SYNC_IN = 0xA5, SYNC_OUT = 0x5A;
-constexpr uint8_t CMD_BUY = 1, CMD_SELL = 2, CMD_CONFIG = 3, CMD_RESET = 4, CMD_QUERY = 5;
+constexpr uint8_t CMD_BUY = 1, CMD_SELL = 2, CMD_CONFIG = 3, CMD_RESET = 4, CMD_QUERY = 5, CMD_REFERENCE = 6;
 constexpr int IN_LEN = 5, OUT_LEN = 13;
 
 inline std::vector<uint32_t> load_table(const std::string& path) {
@@ -62,6 +63,9 @@ public:
         }
         case CMD_RESET: d = 0; fills = 0; ok = true; break;
         case CMD_QUERY: ok = true; break;
+        case CMD_REFERENCE:
+            if (arg <= 100) { reference = arg; ok = true; }
+            break;
         default: return false;
         }
         requote();
@@ -97,6 +101,8 @@ private:
             const int64_t bid = (bid_fp >> F) - hs;                  // floor, then widen
             if (bid >= 1 && bid <= 99) bid_px = static_cast<int>(bid);
         }
+        if (bid_px) bid_px = std::max(0, std::min(99, bid_px + reference - 50));
+        if (ask_px) ask_px = std::max(0, std::min(99, ask_px + reference - 50));
     }
 
     std::vector<uint32_t> G;
@@ -105,6 +111,7 @@ private:
     int      d = 0;              // net YES shares sold
     uint32_t fills = 0;
     int      bid_px = 0, ask_px = 0;
+    int      reference = 50;
 };
 
 inline uint8_t xor8(const uint8_t* p, int n) {

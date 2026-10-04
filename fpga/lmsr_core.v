@@ -42,7 +42,7 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
     input  wire        ui_kill
 );
     localparam CMD_BUY = 8'd1, CMD_SELL = 8'd2, CMD_CONFIG = 8'd3,
-               CMD_RESET = 8'd4, CMD_QUERY = 8'd5;
+               CMD_RESET = 8'd4, CMD_QUERY = 8'd5, CMD_REFERENCE = 8'd6;
     // Board-button events. They come from top.v, never from the serial port
     // (frame_rx only lets commands 1-5 through). Each produces a "notice":
     // a reply with status bit 7 set, carrying the current quote.
@@ -56,6 +56,7 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
     reg       ok_r;        // was the request accepted
     reg [2:0] cmd_r;
     reg       notice_r;    // this reply is a notice (nobody asked for it)
+    reg [6:0] reference;   // external YES reference price, whole cents
 
     assign busy = (state != S_IDLE);
     wire [1:0] lbm6_eff = ui_enable ? ui_lbm6 : lbm6;
@@ -113,8 +114,11 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
     wire [24:0] ask_ceil = {1'b0, ask_sh[23:0]} + 25'd65535;       // ceil
     wire signed [9:0] ask_c = {1'b0, ask_ceil[24:16]} + {6'd0, hs_eff};
     wire signed [9:0] bid_c = {2'b00, bid_sh[23:16]} - {6'd0, hs_eff}; // floor
-    wire ask_live = !kill_eff && ask_in && (ask_c >= 10'sd1) && (ask_c <= 10'sd99);
-    wire bid_live = !kill_eff && bid_in && (bid_c >= 10'sd1) && (bid_c <= 10'sd99);
+    wire signed [9:0] ref_shift = $signed({1'b0, reference}) - 10'sd50;
+    wire signed [9:0] ask_ref = ask_c + ref_shift;
+    wire signed [9:0] bid_ref = bid_c + ref_shift;
+    wire ask_live = !kill_eff && ask_in && (ask_ref >= 10'sd1) && (ask_ref <= 10'sd99);
+    wire bid_live = !kill_eff && bid_in && (bid_ref >= 10'sd1) && (bid_ref <= 10'sd99);
 
     // ---- request checks (used in S_IDLE) -----------------------------------
     wire qty_ok = (arg != 16'd0) && ({1'b0, arg} <= s);
@@ -135,6 +139,7 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
             lbm6   <= 2'd2;           // b = 256
             ls     <= 4'd3;           // s = 8
             hs     <= 4'd0;
+            reference <= 7'd50;
             kill   <= 1'b0;
             bid_px <= 7'd0;
             ask_px <= 7'd0;
@@ -167,6 +172,10 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
                         fills <= 32'd0;
                         ok_r  <= 1'b1;
                     end
+                    CMD_REFERENCE: if (arg <= 16'd100) begin
+                        reference <= arg[6:0];
+                        ok_r <= 1'b1;
+                    end
                     EVT_KILL: begin
                         kill <= ~kill;
                         ok_r <= 1'b1;
@@ -186,8 +195,8 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
                 state    <= S_ROUND;
             end
             S_ROUND: begin
-                ask_px     <= ask_live ? ask_c[6:0] : 7'd0;
-                bid_px     <= bid_live ? bid_c[6:0] : 7'd0;
+                ask_px     <= ask_live ? ask_ref[6:0] : 7'd0;
+                bid_px     <= bid_live ? bid_ref[6:0] : 7'd0;
                 status     <= {notice_r, lbm6_eff, kill_eff, cmd_r, ok_r};
                 resp_valid <= 1'b1;
                 state      <= S_IDLE;

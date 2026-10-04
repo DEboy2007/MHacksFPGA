@@ -17,10 +17,11 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from dataclasses import dataclass, field
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "golden"))
-from lmsr_mm import LmsrMM, load_table  # noqa: E402
+from lmsr_mm import CMD_REFERENCE, LmsrMM, load_table  # noqa: E402
 
 GAMMA = "https://gamma-api.polymarket.com/markets"
 CLOB = "https://clob.polymarket.com"
@@ -51,7 +52,11 @@ def discover_market():
                 and market.get("enableOrderBook")
                 and market.get("acceptingOrders")):
             market["_outcomes"] = outcomes
-            market["_tokens"] = [str(token) for token in tokens]
+            mapped = {str(outcome).strip().upper(): str(token)
+                      for outcome, token in zip(outcomes, tokens)}
+            if "YES" not in mapped or "NO" not in mapped:
+                continue
+            market["_tokens"] = mapped
             eligible.append(market)
     if not eligible:
         raise RuntimeError("no active binary order-book market found")
@@ -65,66 +70,121 @@ def fetch_book(token_id):
 def levels(values):
     return {float(row["price"]): float(row["size"]) for row in values or []}
 
+@dataclass
+class MarketState:
+    best_bid: float | None = None
+    best_bid_size: float = 0.0
+    best_ask: float | None = None
+    best_ask_size: float = 0.0
+    last_trade: float | None = None
+    updated_at: float = 0.0
+
+@dataclass
+class AssetBook:
+    bids: dict[float, float] = field(default_factory=dict)
+    asks: dict[float, float] = field(default_factory=dict)
+    state: MarketState = field(default_factory=MarketState)
+
+    def refresh(self):
+        bid = max(self.bids, default=None)
+        ask = min(self.asks, default=None)
+        self.state.best_bid = bid
+        self.state.best_bid_size = self.bids.get(bid, 0.0) if bid is not None else 0.0
+        self.state.best_ask = ask
+        self.state.best_ask_size = self.asks.get(ask, 0.0) if ask is not None else 0.0
+        self.state.updated_at = time.time()
+
 
 class PaperTrader:
-    def __init__(self, market, cash_dollars, lb, ls, hs):
+    def __init__(self, market, cash_dollars, lb, ls, hs, stale_after=30.0):
         self.market = market
         self.mm = LmsrMM(load_table(), lb=lb, ls=ls, hs=hs)
         self.cash_cents = round(cash_dollars * 100)
         self.inventory = 0
-        self.bid_book = {}
-        self.ask_book = {}
-        self.last_trade = None
+        self.books = {asset: AssetBook() for asset in market["_tokens"].values()}
+        self.yes_asset = market["_tokens"]["YES"]
         self.fills = 0
+        self.stale = True
+        self.stale_after = stale_after
+        self.last_feed_update = 0.0
 
     def quote(self):
         bid, ask = self.mm.quote()
         size = 1 << self.mm.ls
         return bid / 100 if bid else None, ask / 100 if ask else None, size
 
-    def apply_book(self, book):
-        self.bid_book = levels(book.get("bids"))
-        self.ask_book = levels(book.get("asks"))
-        self.match_resting_orders("book")
+    def apply_book(self, asset_id, book):
+        asset = self.books.setdefault(asset_id, AssetBook())
+        was_stale = self.stale
+        asset.bids = levels(book.get("bids"))
+        asset.asks = levels(book.get("asks"))
+        asset.refresh()
+        self.stale = False
+        self.last_feed_update = time.monotonic()
+        if asset_id == self.yes_asset:
+            self.update_reference()
+        if not was_stale:
+            self.match_resting_orders("book")
 
-    def apply_price_changes(self, changes):
+    def apply_price_changes(self, asset_id, changes):
+        asset = self.books.setdefault(asset_id, AssetBook())
         for change in changes or []:
             price = float(change["price"])
             size = float(change.get("size", 0))
             side = str(change.get("side", "")).upper()
-            target = self.bid_book if side == "BUY" else self.ask_book
+            target = asset.bids if side == "BUY" else asset.asks
             if size:
                 target[price] = size
             else:
                 target.pop(price, None)
+        asset.refresh()
+        if asset_id == self.yes_asset:
+            self.update_reference()
+        self.last_feed_update = time.monotonic()
         self.match_resting_orders("book")
 
-    def apply_trade(self, price, size, source="trade"):
-        self.last_trade = price
-        bid, ask, quote_size = self.quote()
-        qty = min(float(size), quote_size)
-        if ask is not None and price >= ask:
-            self.fill("buy_yes", ask, qty, source)
-        elif bid is not None and price <= bid:
-            self.fill("sell_yes", bid, qty, source)
+    def apply_trade(self, asset_id, price, size):
+        asset = self.books.setdefault(asset_id, AssetBook())
+        asset.state.last_trade = price
+        asset.state.updated_at = time.time()
+
+    def update_reference(self):
+        state = self.books[self.yes_asset].state
+        if state.best_bid is None or state.best_ask is None:
+            self.stale = True
+            return
+        midpoint_cents = int(((state.best_bid + state.best_ask) * 50) // 1)
+        midpoint_cents = max(0, min(100, midpoint_cents))
+        self.mm.handle(CMD_REFERENCE, midpoint_cents)
+
+    def emit_yes_state(self):
+        state = self.books[self.yes_asset].state
+        if state.best_bid is None or state.best_ask is None:
+            print("STALE", flush=True)
+            return
+        print("FRESH", flush=True)
+        print("BOOK %.8f %.8f %.8f %.8f" %
+              (state.best_bid, state.best_bid_size,
+               state.best_ask, state.best_ask_size), flush=True)
 
     def match_resting_orders(self, source):
         bid, ask, quote_size = self.quote()
-        if not self.bid_book or not self.ask_book:
+        yes = self.books[self.yes_asset]
+        if not yes.bids or not yes.asks or self.stale:
             return
-        best_bid = max(self.bid_book)
-        best_ask = min(self.ask_book)
+        best_bid = max(yes.bids)
+        best_ask = min(yes.asks)
         if ask is not None and ask <= best_bid:
-            qty = min(quote_size, self.bid_book[best_bid])
-            self.bid_book[best_bid] -= qty
-            if self.bid_book[best_bid] <= 0:
-                del self.bid_book[best_bid]
+            qty = min(quote_size, yes.bids[best_bid])
+            yes.bids[best_bid] -= qty
+            if yes.bids[best_bid] <= 0:
+                del yes.bids[best_bid]
             self.fill("buy_yes", ask, qty, f"{source}-cross")
         elif bid is not None and bid >= best_ask:
-            qty = min(quote_size, self.ask_book[best_ask])
-            self.ask_book[best_ask] -= qty
-            if self.ask_book[best_ask] <= 0:
-                del self.ask_book[best_ask]
+            qty = min(quote_size, yes.asks[best_ask])
+            yes.asks[best_ask] -= qty
+            if yes.asks[best_ask] <= 0:
+                del yes.asks[best_ask]
             self.fill("sell_yes", bid, qty, f"{source}-cross")
 
     def fill(self, side, price, qty, source):
@@ -154,16 +214,20 @@ class PaperTrader:
 
 def run(args):
     market = discover_market()
-    token = market["_tokens"][0]
+    token = market["_tokens"]["YES"]
     print(json.dumps({
         "type": "market", "id": market["id"], "condition_id": market["conditionId"],
         "question": market["question"], "outcomes": market["_outcomes"],
-        "yes_token": token, "volume24hr": market.get("volume24hr"),
+        "yes_token": token, "no_token": market["_tokens"]["NO"],
+        "volume24hr": market.get("volume24hr"),
         "slug": market.get("slug"),
     }), flush=True)
-    trader = PaperTrader(market, args.cash, args.lb, args.ls, args.hs)
+    trader = PaperTrader(market, args.cash, args.lb, args.ls, args.hs,
+                         args.stale_after)
     try:
-        trader.apply_book(fetch_book(token))
+        trader.apply_book(token, fetch_book(token))
+        if args.exchange_source:
+            trader.emit_yes_state()
     except Exception as exc:
         # Some CLOB deployments require the WebSocket snapshot even though
         # public trades remain available over HTTP.
@@ -175,30 +239,73 @@ def run(args):
     except ImportError as exc:
         raise SystemExit("install dependency first: python3 -m pip install websocket-client") from exc
 
-    ws = websocket.create_connection(WS, timeout=30, origin="https://polymarket.com")
-    ws.send(json.dumps({"assets_ids": market["_tokens"], "type": "market"}))
-    print(json.dumps({"type": "connected", "channel": "market",
-                      "tokens": market["_tokens"]}), flush=True)
     deadline = time.monotonic() + args.seconds if args.seconds else None
-    try:
-        while deadline is None or time.monotonic() < deadline:
-            raw = ws.recv()
-            if raw is None:
+    reconnects = 0
+    while deadline is None or time.monotonic() < deadline:
+        ws = None
+        try:
+            ws = websocket.create_connection(WS, timeout=5,
+                                             origin="https://polymarket.com")
+            ws.send(json.dumps({"assets_ids": list(market["_tokens"].values()),
+                                "type": "market"}))
+            reconnects = 0
+            print(json.dumps({"type": "connected", "channel": "market",
+                              "tokens": market["_tokens"]}), flush=True)
+            while deadline is None or time.monotonic() < deadline:
+                try:
+                    raw = ws.recv()
+                except websocket.WebSocketTimeoutException:
+                    age = time.monotonic() - trader.last_feed_update
+                    if age >= trader.stale_after:
+                        if not trader.stale:
+                            trader.stale = True
+                            print(json.dumps({"type": "feed_stale",
+                                              "age": age}), flush=True)
+                        raise ConnectionError("stale Polymarket feed")
+                    continue
+                if raw is None:
+                    raise ConnectionError("Polymarket stream closed")
+                messages = json.loads(raw) if isinstance(raw, str) else raw
+                if not isinstance(messages, list):
+                    messages = [messages]
+                for message in messages:
+                    event = message.get("event_type", message.get("type", ""))
+                    changes = message.get("price_changes", [])
+                    asset_id = str(message.get("asset_id", message.get("asset", "")))
+                    if event in ("book", "book_update"):
+                        trader.apply_book(asset_id, message)
+                    elif event in ("price_change", "price_changes"):
+                        for change in changes or [message]:
+                            change_asset = str(change.get("asset_id", asset_id))
+                            trader.apply_price_changes(change_asset, [change])
+                    elif event in ("last_trade_price", "trade", "trades"):
+                        trader.apply_trade(asset_id, float(message["price"]),
+                                           float(message.get("size", 1)))
+                    if args.exchange_source and (
+                            event in ("book", "book_update", "price_change",
+                                      "price_changes")):
+                        trader.emit_yes_state()
+        except Exception as exc:
+            reconnects += 1
+            trader.stale = True
+            if args.exchange_source:
+                print("STALE", flush=True)
+            print(json.dumps({"type": "feed_disconnected", "error": str(exc),
+                              "attempt": reconnects}), file=sys.stderr, flush=True)
+            if deadline is not None and time.monotonic() >= deadline:
                 break
-            messages = json.loads(raw) if isinstance(raw, str) else raw
-            if not isinstance(messages, list):
-                messages = [messages]
-            for message in messages:
-                event = message.get("event_type", message.get("type", ""))
-                if event in ("book", "book_update"):
-                    trader.apply_book(message)
-                elif event in ("price_change", "price_changes"):
-                    trader.apply_price_changes(message.get("price_changes", [message]))
-                elif event in ("last_trade_price", "trade", "trades"):
-                    trader.apply_trade(float(message["price"]),
-                                       float(message.get("size", 1)))
-    finally:
-        ws.close()
+            if reconnects > args.max_reconnects:
+                raise RuntimeError("Polymarket feed did not recover") from exc
+            time.sleep(min(2 ** min(reconnects, 5), 15))
+            try:
+                trader.apply_book(token, fetch_book(token))
+            except Exception as snapshot_exc:
+                print(json.dumps({"type": "snapshot_resync_failed",
+                                  "error": str(snapshot_exc)}),
+                      file=sys.stderr, flush=True)
+        finally:
+            if ws is not None:
+                ws.close()
 
 
 def main():
@@ -210,6 +317,11 @@ def main():
     parser.add_argument("--hs", type=int, default=0)
     parser.add_argument("--seconds", type=float,
                         help="stop after this many seconds; default is continuous")
+    parser.add_argument("--stale-after", type=float, default=30.0,
+                        help="suspend execution after this many seconds without a book update")
+    parser.add_argument("--max-reconnects", type=int, default=10)
+    parser.add_argument("--exchange-source", action="store_true",
+                        help="emit normalized BOOK/STALE lines for exchange --source")
     run(parser.parse_args())
 
 

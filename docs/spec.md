@@ -92,6 +92,7 @@ The MM handles one request at a time and answers each with a fresh quote.
 | 3 | CONFIG | see below | `LB <= 8`, `LS <= LB`, bits 15..11 zero | sets `LB, LS, hs, kill` |
 | 4 | RESET | ignored | always | `d = 0`, `fills = 0`; config kept |
 | 5 | QUERY | ignored | always | none |
+| 6 | REFERENCE | `price_cents` | `0 <= price_cents <= 100` | shifts both live quotes around the external YES reference; does not change `d` |
 
 BUY means a trader bought YES at our ask; SELL means a trader sold YES to us at
 our bid. A request that is not accepted changes nothing but is still answered.
@@ -108,6 +109,13 @@ the cost function that is never worse for the house than the exact LMSR price.
 
 Cash/P&L is tracked by the exchange simulator, not the pricing core (it needs
 `price * qty`, and the FPGA has no multipliers).
+
+REFERENCE is the deterministic external-price input used by the live
+Polymarket adapter. The V1 value is the floor of the YES best-bid/best-ask
+midpoint after converting both prices to cents. The core computes its normal
+inventory quote, then adds `price_cents - 50` to each live side and pulls any
+result outside 1..99. This keeps the external reference separate from the
+inventory state `d`; public market trades never issue BUY or SELL requests.
 
 ## 5. Reachable range
 

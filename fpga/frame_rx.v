@@ -19,7 +19,7 @@ module frame_rx #(parameter TIMEOUT = 120000) (
     reg [7:0]  xsum;       // running xor of the bytes so far
     reg [19:0] idle;       // clocks since the last byte
 
-    wire cmd_known = (cmd >= 8'd1) && (cmd <= 8'd5);
+    wire cmd_known = (cmd >= 8'd1) && (cmd <= 8'd6);
 
     always @(posedge clk) begin
         req_valid <= 1'b0;

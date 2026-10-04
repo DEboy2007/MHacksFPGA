@@ -14,7 +14,7 @@ ONE = 1 << F
 
 # Protocol (spec section 6)
 SYNC_IN, SYNC_OUT = 0xA5, 0x5A
-CMD_BUY, CMD_SELL, CMD_CONFIG, CMD_RESET, CMD_QUERY = 1, 2, 3, 4, 5
+CMD_BUY, CMD_SELL, CMD_CONFIG, CMD_RESET, CMD_QUERY, CMD_REFERENCE = 1, 2, 3, 4, 5, 6
 IN_LEN, OUT_LEN = 5, 13
 
 TABLE_PATH = pathlib.Path(__file__).resolve().parent.parent / "tables" / "softplus_tail.hex"
@@ -48,6 +48,7 @@ class LmsrMM:
         self.kill = False
         self.d = 0          # net YES shares sold
         self.fills = 0      # accepted fills, 32-bit wrapping
+        self.reference = 50 # external YES reference price, whole cents
 
     def H(self, k):
         """100 * 2^F * softplus(k/N), for -KMAX <= k <= KMAX."""
@@ -76,6 +77,9 @@ class LmsrMM:
             if 1 <= bid <= 99:
                 bid_px = bid
 
+        shift = self.reference - 50
+        bid_px = max(0, min(99, bid_px + shift)) if bid_px else 0
+        ask_px = max(0, min(99, ask_px + shift)) if ask_px else 0
         return bid_px, ask_px
 
     def handle(self, cmd, arg):
@@ -99,6 +103,10 @@ class LmsrMM:
             self.d, self.fills, ok = 0, 0, True
         elif cmd == CMD_QUERY:
             ok = True
+        elif cmd == CMD_REFERENCE:
+            if arg <= 100:
+                self.reference = arg
+                ok = True
         else:
             return None
         bid_px, ask_px = self.quote()

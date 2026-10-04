@@ -20,6 +20,7 @@ All three produce identical quotes for the same order stream.
     open out/bench/index.html # M6 replay dashboard
     python3 -m pip install -r requirements-polymarket.txt
     python3 tools/polymarket_paper.py --seconds 60
+    exchange/exchange --source 'cmd:python3 tools/polymarket_paper.py --exchange-source' --mm cmd:mm_cpp/mm_cpp
     cd fpga && apio upload    # build and flash the market maker
     python3 tools/replay.py   # golden vectors against the board (--cmd mm_cpp/mm_cpp for software)
     make demo                 # then press KEY0: replays a fixed order stream you can watch (RATE=10 trades/s)
@@ -36,6 +37,14 @@ simulates local resting bid/ask orders. It starts with $100,000,000 paper cash
 by default (`--cash` changes this), and never sends authenticated orders or
 requires a wallet/private key. `--seconds` is useful for a bounded smoke test;
 without it the stream runs continuously.
+
+For live routing into an existing MM transport, `--exchange-source` emits
+normalized YES `FRESH`/`STALE` and `BOOK` lines. `exchange --source` consumes
+those lines, sends `CMD_REFERENCE` using the YES book midpoint, and only sends
+BUY/SELL requests when the external book crosses the MM's simulated resting
+quote. `TRADE` observations are intentionally not fill events. Replace
+`cmd:mm_cpp/mm_cpp` with `cmd:mm_py/main.py` or
+`serial:/dev/cu.usbmodem2103` to select the C++, Python, or FPGA MM.
 
 Board buttons (the order feed lives on the laptop, so `make demo` must be running for KEY0/KEY2/KEY3 to do anything visible):
 

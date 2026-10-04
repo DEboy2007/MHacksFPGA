@@ -119,9 +119,45 @@ private:
     pid_t pid = -1;
 };
 
+class LineSource {
+public:
+    explicit LineSource(const std::string& cmd) {
+        int pipefd[2];
+        if (pipe(pipefd) != 0) die("source pipe failed");
+        pid = fork();
+        if (pid < 0) die("source fork failed");
+        if (pid == 0) {
+            dup2(pipefd[1], STDOUT_FILENO);
+            close(pipefd[0]); close(pipefd[1]);
+            execl("/bin/sh", "sh", "-c", ("exec " + cmd).c_str(), static_cast<char*>(nullptr));
+            _exit(127);
+        }
+        close(pipefd[1]);
+        in = fdopen(pipefd[0], "r");
+        if (!in) die("source fdopen failed");
+    }
+    ~LineSource() {
+        if (in) fclose(in);
+        int st; waitpid(pid, &st, 0);
+    }
+    bool read_line(std::string& line) {
+        char* buf = nullptr;
+        size_t cap = 0;
+        ssize_t n = getline(&buf, &cap, in);
+        if (n < 0) { free(buf); return false; }
+        line.assign(buf, static_cast<size_t>(n));
+        free(buf);
+        return true;
+    }
+private:
+    FILE* in = nullptr;
+    pid_t pid = -1;
+};
+
 // ---- protocol ----------------------------------------------------------------
 
-enum : uint8_t { CMD_BUY = 1, CMD_SELL = 2, CMD_CONFIG = 3, CMD_RESET = 4, CMD_QUERY = 5 };
+enum : uint8_t { CMD_BUY = 1, CMD_SELL = 2, CMD_CONFIG = 3, CMD_RESET = 4,
+                 CMD_QUERY = 5, CMD_REFERENCE = 6 };
 
 struct Quote {
     uint8_t  status = 0;
@@ -307,6 +343,7 @@ static void run(Session& ses, const EventFile& ef, FILE* lf, bool show) {
             ses.pace_event(i);
             q = ses.last;                 // a button may have changed the quote
         }
+
         // 0 = no trade, 1 = trader buys YES at our ask, 2 = trader sells at our bid.
         int action = 0;
         if (e.informed) {
@@ -353,10 +390,52 @@ static void run(Session& ses, const EventFile& ef, FILE* lf, bool show) {
            ef.outcome_yes ? "YES" : "NO", (cash - (ef.outcome_yes ? 100LL * q.d : 0)) / 100.0);
 }
 
+// Live source protocol:
+//   BOOK <bid> <bid_size> <ask> <ask_size>
+//   TRADE <price> <size>       (observation only; never a fill)
+//   STALE / FRESH
+static void run_live(Session& ses, LineSource& source) {
+    bool fresh = false;
+    std::string line;
+    while (source.read_line(line)) {
+        double bid, bid_size, ask, ask_size;
+        char kind[16];
+        if (sscanf(line.c_str(), "%15s", kind) != 1) continue;
+        if (!strcmp(kind, "STALE")) { fresh = false; continue; }
+        if (!strcmp(kind, "FRESH")) { fresh = true; continue; }
+        if (!strcmp(kind, "TRADE")) continue;
+        if (strcmp(kind, "BOOK") != 0 ||
+            sscanf(line.c_str(), "%*s %lf %lf %lf %lf",
+                   &bid, &bid_size, &ask, &ask_size) != 4) continue;
+        if (bid < 0 || ask > 1 || bid > ask) { fresh = false; continue; }
+        const int ref = std::max(0, std::min(100, static_cast<int>((bid + ask) * 50.0)));
+        Quote q = ses.request(CMD_REFERENCE, static_cast<uint16_t>(ref));
+        if (!fresh) continue;
+        int action = 0;
+        int qty = 0;
+        if (q.ask && bid >= q.ask / 100.0) {
+            action = 1;
+            qty = std::min(8, static_cast<int>(bid_size));
+        } else if (q.bid && ask <= q.bid / 100.0) {
+            action = 2;
+            qty = std::min(8, static_cast<int>(ask_size));
+        }
+        if (action && qty > 0) {
+            const int before = q.d;
+            q = ses.request(action == 1 ? CMD_BUY : CMD_SELL, static_cast<uint16_t>(qty));
+            if (!(q.status & 1) || q.d == before) continue;
+            printf("live fill %s %d @ %d cents, d=%d\n",
+                   action == 1 ? "buy_yes" : "sell_yes", qty,
+                   action == 1 ? q.ask : q.bid, q.d);
+            fflush(stdout);
+        }
+    }
+}
+
 // ---- main ----------------------------------------------------------------------
 
 int main(int argc, char** argv) {
-    std::string events_path, mm, quotes_path, log_path;
+    std::string events_path, mm, source_path, quotes_path, log_path;
     double rate = 0;
     bool demo = false;
     for (int i = 1; i < argc; i += 2) {
@@ -366,16 +445,18 @@ int main(int argc, char** argv) {
         std::string v = argv[i + 1];
         if      (a == "--events") events_path = v;
         else if (a == "--mm")     mm = v;
+        else if (a == "--source") source_path = v;
         else if (a == "--quotes") quotes_path = v;
         else if (a == "--log")    log_path = v;
         else if (a == "--rate")   rate = atof(v.c_str());
         else die("unknown option " + a);
     }
-    if (events_path.empty() || mm.empty())
-        die("usage: exchange --events FILE --mm serial:PORT|cmd:COMMAND [--quotes FILE] [--log FILE] [--rate REQ_PER_SEC] [--demo]");
+    if (mm.empty() || (events_path.empty() == source_path.empty()))
+        die("usage: exchange --events FILE | --source cmd:COMMAND --mm serial:PORT|cmd:COMMAND [--quotes FILE] [--log FILE] [--rate REQ_PER_SEC] [--demo]");
     signal(SIGPIPE, SIG_IGN);
 
-    const EventFile ef = load_events(events_path);
+    if (!source_path.empty() && source_path.rfind("cmd:", 0) != 0)
+        die("--source must start with cmd:");
     std::unique_ptr<Transport> tr;
     if (mm.rfind("serial:", 0) == 0)   tr = std::make_unique<SerialTransport>(mm.substr(7));
     else if (mm.rfind("cmd:", 0) == 0) tr = std::make_unique<ChildTransport>(mm.substr(4));
@@ -387,6 +468,14 @@ int main(int argc, char** argv) {
     if (lf) fprintf(lf, "event,informed,action,qty,px,bid,ask,d,seq,mm_latency,rt_ns,truth_bp,cash,mtm\n");
 
     Session ses(*tr, qf, rate);
+    if (!source_path.empty()) {
+        LineSource source(source_path.substr(4));
+        run_live(ses, source);
+        if (qf) fclose(qf);
+        if (lf) fclose(lf);
+        return 0;
+    }
+    const EventFile ef = load_events(events_path);
     if (!demo) {
         run(ses, ef, lf, false);
     } else {
