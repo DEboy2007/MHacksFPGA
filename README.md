@@ -22,6 +22,7 @@ All three produce identical quotes for the same order stream.
     python3 tools/polymarket_paper.py --seconds 60
     cd fpga && apio upload    # build and flash the market maker
     python3 tools/replay.py   # golden vectors against the board (--cmd mm_cpp/mm_cpp for software)
+    make demo                 # then press KEY0: replays a fixed order stream you can watch (RATE=10 trades/s)
 
 The FPGA's serial port is `/dev/cu.usbmodem2103`. KEY0 on the board restarts the market maker.
 For M6, raise SW17 to enable local controls: SW1:0 selects b=64/128/256,
@@ -35,3 +36,10 @@ simulates local resting bid/ask orders. It starts with $100,000,000 paper cash
 by default (`--cash` changes this), and never sends authenticated orders or
 requires a wallet/private key. `--seconds` is useful for a bounded smoke test;
 without it the stream runs continuously.
+
+Board buttons (the order feed lives on the laptop, so `make demo` must be running for KEY0/KEY2/KEY3 to do anything visible):
+
+- KEY0: restart the market maker and replay the feed from the start
+- KEY1: kill switch on/off
+- KEY3: pause the feed at the current order
+- KEY2: resume

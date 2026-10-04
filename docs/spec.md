@@ -142,6 +142,7 @@ Reply, MM to host, 13 bytes:
 
 - `status`: bit 0 = accepted, bits 3..1 = `cmd` echoed, bit 4 = `kill`,
   bits 6..5 = `LB - 6`, bit 7 = 0. All reflect the state after the request.
+  (Bit 7 = 1 marks a board-button notice, FPGA only: section 10.)
 - `seq`: low 16 bits of `fills`.
 - `latency`: see section 8. **Excluded from the bit-exact comparison**; every
   other byte must match across implementations.
@@ -214,6 +215,26 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
   selects `hs` in cents. KEY3 is active-low and immediately pulls both quotes.
   With SW17 low, host CONFIG messages retain full control. LEDY indicates
   UI-enable, kill, core-busy and UART receive activity.
+- Build (with buttons): 1,546 logic cells, estimated maximum clock 49.3 MHz.
+- **Buttons** (FPGA only):
+
+  | Button | Effect on the board | Notice type |
+  |---|---|---|
+  | KEY0 | restart while held: `d = 0`, `fills = 0`, power-on config | 0, sent on release and at power-on |
+  | KEY1 | kill switch on/off (same `kill` bit CONFIG sets); LEDR0 shows it | 1 |
+  | KEY3 | asks the laptop to pause the order feed; LEDG1 lights | 2 |
+  | KEY2 | asks the laptop to resume; LEDG1 goes out | 3 |
+
+- **Notices:** each button press makes the board send one reply-format frame
+  unasked: status bit 7 = 1, the notice type in the `cmd` bits, bit 0 = 1, and
+  the current quote, `d` and `seq`. The restart notice is `0xC1` with quote
+  49/51. The latency field of a notice means nothing.
+- A notice and a reply never overlap on the wire. If a request arrives while a
+  notice is being sent it waits and is answered afterwards (its latency field
+  then includes the wait). This only happens when a button is pressed.
+- `exchange --demo` acts on notices (restart, pause, resume, kill). Outside
+  demo mode any notice during a run is an error, so benchmark runs cannot be
+  silently disturbed by a button.
 
 ## 11. Order-flow file
 

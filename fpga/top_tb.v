@@ -10,6 +10,8 @@
 module top_tb;
     localparam NVEC = 6057;
     localparam real CLK_NS = 83.334;
+    // Restart notice: status 0xC1 = notice | LB 8 | type 0 | ok, quote 49/51.
+    localparam [55:0] NOTICE = {8'hC1, 8'd49, 8'd51, 16'd0, 16'd0};
 
     reg clk = 0;
     always #41.667 clk = ~clk;
@@ -83,13 +85,22 @@ module top_tb;
     // (status, bid, ask, d, seq). expect_reply = 0 checks that nothing comes back.
     task transact(input integer sel, input integer tag, input [7:0] c, input [15:0] a,
                   input [7:0] xor_flip, input expect_reply, input [55:0] want);
+        begin
+            send_frame(sel, c, a, xor_flip);
+            check_reply(sel, tag, expect_reply, 1, want);
+        end
+    endtask
+
+    // Wait for a frame from the design and check it. check_lat = 0 skips the
+    // "same latency as every other reply" check (used for restart notices).
+    task check_reply(input integer sel, input integer tag, input expect_reply,
+                     input check_lat, input [55:0] want);
         reg [7:0]  r [0:12];
         reg [7:0]  x;
         reg        got;
         reg [31:0] l;
         integer    n;
         begin
-            send_frame(sel, c, a, xor_flip);
             recv_byte(sel, r[0], got);
             if (!expect_reply) begin
                 if (got) begin
@@ -104,11 +115,11 @@ module top_tb;
                 x = 0;
                 for (n = 0; n < 13; n = n + 1) x = x ^ r[n];
                 l = {r[11], r[10], r[9], r[8]};
-                if (lat[sel] < 0) lat[sel] = l;
-                if (r[0] !== 8'h5A || x !== 8'h00 || l !== lat[sel] ||
+                if (check_lat && lat[sel] < 0) lat[sel] = l;
+                if (r[0] !== 8'h5A || x !== 8'h00 || (check_lat && l !== lat[sel]) ||
                     {r[1], r[2], r[3], r[5], r[4], r[7], r[6]} !== want) begin
-                    $display("FAIL dut %0d #%0d cmd %0d arg %0d: sync=%h xor=%h lat=%0d got=%h want=%h",
-                             sel, tag, c, a, r[0], x, l,
+                    $display("FAIL dut %0d #%0d: sync=%h xor=%h lat=%0d got=%h want=%h",
+                             sel, tag, r[0], x, l,
                              {r[1], r[2], r[3], r[5], r[4], r[7], r[6]}, want);
                     errors[sel] = errors[sel] + 1;
                 end
@@ -125,7 +136,9 @@ module top_tb;
         bit_ns[0] = 8 * CLK_NS;
         bit_ns[1] = 8680.556;
         errors[0] = 0; errors[1] = 0; lat[0] = -1; lat[1] = -1;
-        #100000;
+        // Both designs announce themselves once after power-on:
+        check_reply(0, 8000, 1, 0, NOTICE);
+        #(200 * 8680.556);                // let the 115200-baud link's notice finish too
         // (One after the other, not in parallel: the tasks above keep their
         // variables between calls, so two callers at once would collide.)
         for (i = 0; i < NVEC; i = i + 1)
@@ -143,14 +156,49 @@ module top_tb;
         #(500 * CLK_NS);                                     // ...then a pause > TIMEOUT
         transact(0, 9005, 8'd5, 16'd0, 8'h00, 1, last);     // must resync
 
-        // KEY0 restarts: afterwards the state is the power-on one (49/51, d=0).
-        key[0] = 0; #(50 * CLK_NS); key[0] = 1; #(50 * CLK_NS);
-        transact(0, 9006, 8'd5, 16'd0, 8'h00, 1, {8'h4B, 8'd49, 8'd51, 16'd0, 16'd0});
+        // KEY0 restarts: on release the design sends a restart notice, and
+        // the state is the power-on one (49/51, d=0).
+        key[0] = 0; #(50 * CLK_NS); key[0] = 1;
+        check_reply(0, 9006, 1, 0, NOTICE);
+        transact(0, 9007, 8'd5, 16'd0, 8'h00, 1, {8'h4B, NOTICE[47:0]});
+
+        // KEY1 = kill switch: notice type 1, both sides pulled; again = back on.
+        // (The notice starts a few clocks after the press, so we must already
+        // be listening: press and listen run side by side.)
+        fork
+            begin key[1] = 0; #(20 * CLK_NS); key[1] = 1; end
+            check_reply(0, 9010, 1, 0, {8'hD3, 8'd0, 8'd0, 16'd0, 16'd0});
+        join
+        transact(0, 9011, 8'd1, 16'd8, 8'h00, 1, {8'h52, 8'd0, 8'd0, 16'd0, 16'd0});  // buy rejected
+        fork
+            begin key[1] = 0; #(20 * CLK_NS); key[1] = 1; end
+            check_reply(0, 9012, 1, 0, {8'hC3, NOTICE[47:0]});
+        join
+        // KEY3 = pause (type 2), KEY2 = resume (type 3).
+        fork
+            begin key[3] = 0; #(20 * CLK_NS); key[3] = 1; end
+            check_reply(0, 9013, 1, 0, {8'hC5, NOTICE[47:0]});
+        join
+        if (ledg_f[1] !== 1'b1) begin $display("FAIL: paused LED off"); errors[0] = errors[0] + 1; end
+        fork
+            begin key[2] = 0; #(20 * CLK_NS); key[2] = 1; end
+            check_reply(0, 9014, 1, 0, {8'hC7, NOTICE[47:0]});
+        join
+        if (ledg_f[1] !== 1'b0) begin $display("FAIL: paused LED on"); errors[0] = errors[0] + 1; end
+        // A button pressed just as a request is being sent: the notice goes
+        // out first, the request waits, and its reply follows. Nothing is lost.
+        fork
+            begin key[3] = 0; #(20 * CLK_NS); key[3] = 1; send_frame(0, 8'd1, 16'd8, 8'h00); end
+            begin
+                check_reply(0, 9015, 1, 0, {8'hC5, NOTICE[47:0]});
+                check_reply(0, 9016, 1, 0, {8'h43, 8'd50, 8'd52, 16'd8, 16'd1});
+            end
+        join
 
         for (j = 0; j < 60; j = j + 1)
             transact(1, j, vec[j][79:72], vec[j][71:56], 8'h00, 1, vec[j][55:0]);
         if (errors[0] + errors[1] != 0) $fatal(1, "%0d errors", errors[0] + errors[1]);
-        $display("PASS: fast link %0d vectors + 6 framing cases + KEY0 restart; 115200-baud link 60 vectors", NVEC);
+        $display("PASS: fast link %0d vectors + 6 framing cases + all four buttons; 115200-baud link 60 vectors", NVEC);
         $display("      latency field: %0d clocks (fast), %0d clocks (115200) on every reply", lat[0], lat[1]);
         $finish;
     end

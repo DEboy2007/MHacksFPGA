@@ -3,8 +3,12 @@
 //   PICO[0] --> uart_rx --> frame_rx --> lmsr_core --> frame_tx --> uart_tx --> PICO[1]
 //
 // HEX7-6: bid, HEX5-4: ask (hex for now, 00 = pulled), HEX3-0: accepted fills.
-// LEDR[0]: kill switch active. LEDG[0]: reply being sent.
+// LEDR[0]: kill switch active. LEDG[0]: reply being sent. LEDG[1]: feed paused.
+//
 // KEY0: restart (same as power-on: d = 0, fills = 0, default config).
+// KEY1: kill switch on/off.   KEY3: pause the order feed.   KEY2: resume it.
+// Every button press makes the board send a "notice" to the laptop, so the
+// program feeding it orders (exchange --demo) can restart, pause or resume.
 module top #(
     parameter CLKS_PER_BIT = 104,       // 12 MHz / 115200 baud
     parameter TIMEOUT      = 120000,    // 10 ms
@@ -23,11 +27,19 @@ module top #(
     wire por_rst;
     por por_i (.clk(clk), .rst(por_rst));
 
-    // KEY0 restarts everything while held. The button is not in step with the
-    // clock, so it goes through two flip-flops before anything uses it.
-    reg [1:0] key0_sync = 2'b00;
-    always @(posedge clk) key0_sync <= {key0_sync[0], ~KEY[0]};
-    wire rst = por_rst | key0_sync[1];
+    // The buttons are not in step with the clock, so each goes through two
+    // flip-flops before anything uses it. A third remembers the previous
+    // value, so "pressed now but not a clock ago" marks the moment of a press.
+    reg [3:0] key_s1 = 0, key_s2 = 0, key_s3 = 0;      // 1 = pressed
+    always @(posedge clk) begin
+        key_s1 <= ~KEY;
+        key_s2 <= key_s1;
+        key_s3 <= key_s2;
+    end
+    wire [3:0] key_press = key_s2 & ~key_s3;
+
+    // KEY0 restarts everything while held.
+    wire rst = por_rst | key_s2[0];
 
     // ---- bytes in -> request ----
     wire [7:0] rx_data;
@@ -54,8 +66,67 @@ module top #(
     wire [6:0] ui_bid_px = ui_kill ? 7'd0 : bid_px;
     wire [6:0] ui_ask_px = ui_kill ? 7'd0 : ask_px;
     wire [7:0] ui_status = status | (ui_kill ? 8'h10 : 8'h00);
+    // ---- who gets the core next ----
+    // Normally a request goes straight in. But the core handles one thing at
+    // a time and there is one serial line out, so a button event must wait
+    // until the core is idle and the previous reply has been handed over; and
+    // a request that arrives while a notice is going out waits its turn in
+    // the pend_* registers. The host only ever has one request outstanding,
+    // so one waiting slot is enough.
+    reg         pend_req, pend_kill, pend_pause, pend_resume, paused;
+    reg  [7:0]  pend_cmd;
+    reg  [15:0] pend_arg;
+    wire        ftx_busy;
+    wire        can_start = !core_busy && !ftx_busy && !resp_valid;
+
+    reg         core_req;
+    reg  [7:0]  core_cmd;
+    reg  [15:0] core_arg;
+    always @(*) begin
+        core_req = 1'b0;
+        core_cmd = cmd;
+        core_arg = arg;
+        if (can_start) begin
+            if (pend_req) begin
+                core_req = 1'b1; core_cmd = pend_cmd; core_arg = pend_arg;
+            end else if (req_valid) begin
+                core_req = 1'b1;
+            end else if (pend_kill) begin
+                core_req = 1'b1; core_cmd = 8'h81;
+            end else if (pend_pause) begin
+                core_req = 1'b1; core_cmd = 8'h82;
+            end else if (pend_resume) begin
+                core_req = 1'b1; core_cmd = 8'h83;
+            end
+        end
+    end
+
+    always @(posedge clk) begin
+        if (rst) begin
+            {pend_req, pend_kill, pend_pause, pend_resume, paused} <= 5'd0;
+        end else begin
+            // whatever was just handed to the core is no longer waiting
+            if (can_start) begin
+                if (pend_req)         pend_req    <= 1'b0;
+                else if (req_valid)   ;
+                else if (pend_kill)   pend_kill   <= 1'b0;
+                else if (pend_pause)  pend_pause  <= 1'b0;
+                else if (pend_resume) pend_resume <= 1'b0;
+            end
+            // new arrivals (these win if both happen on the same clock)
+            if (req_valid && !(can_start && !pend_req)) begin
+                pend_req <= 1'b1;
+                pend_cmd <= cmd;
+                pend_arg <= arg;
+            end
+            if (key_press[1]) pend_kill <= 1'b1;
+            if (key_press[3]) begin pend_pause  <= 1'b1; paused <= 1'b1; end
+            if (key_press[2]) begin pend_resume <= 1'b1; paused <= 1'b0; end
+        end
+    end
+
     lmsr_core #(.HEX_FILE(HEX_FILE)) core_i
-        (.clk(clk), .rst(rst), .req_valid(req_valid), .cmd(cmd), .arg(arg),
+        (.clk(clk), .rst(rst), .req_valid(core_req), .cmd(core_cmd), .arg(core_arg),
          .resp_valid(resp_valid), .status(status), .bid_px(bid_px), .ask_px(ask_px),
          .d(d), .fills(fills), .lbm6(lbm6), .ls(ls), .hs(hs), .kill(kill),
          .busy(core_busy),
@@ -80,7 +151,7 @@ module top #(
 
     // ---- reply -> bytes out ----
     wire [7:0] tx_data;
-    wire       tx_start, tx_busy, ftx_busy, tx;
+    wire       tx_start, tx_busy, tx;
     frame_tx ftx_i
         (.clk(clk), .rst(rst),         .send(resp_valid), .status(ui_status),
         .bid_px({1'b0, ui_bid_px}), .ask_px({1'b0, ui_ask_px}), .d(d),
@@ -100,6 +171,6 @@ module top #(
     hex7seg h1 (.value(fills[7:4]),          .blank(1'b0), .seg(HEX1));
     hex7seg h0 (.value(fills[3:0]),          .blank(1'b0), .seg(HEX0));
     assign LEDR = {6'd0, kill | ui_kill};
-    assign LEDG = {3'd0, ftx_busy};
     assign LEDY = {SW[17], ~KEY[3], core_busy, rx_valid};
+    assign LEDG = {2'd0, paused, ftx_busy};
 endmodule

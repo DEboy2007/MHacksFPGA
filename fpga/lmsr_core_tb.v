@@ -36,11 +36,13 @@ module lmsr_core_tb;
         repeat (4) @(posedge clk);
         rst <= 0;
         @(posedge clk);
-        while (busy) @(posedge clk);       // the first quote is computed after reset
-        if (bid_px !== 7'd49 || ask_px !== 7'd51) begin
-            $display("FAIL: power-on quote is %0d/%0d, expected 49/51", bid_px, ask_px);
+        while (!resp_valid) @(posedge clk); // the restart notice, sent unasked
+        if (status !== 8'hC1 || bid_px !== 7'd49 || ask_px !== 7'd51) begin
+            $display("FAIL: restart notice is status %h quote %0d/%0d, expected C1 49/51",
+                     status, bid_px, ask_px);
             errors = errors + 1;
         end
+        @(posedge clk);
 
         for (i = 0; i < NVEC; i = i + 1) begin
             v = vec[i];
