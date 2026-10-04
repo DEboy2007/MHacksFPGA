@@ -1,0 +1,31 @@
+timestamp: "03210227309"
+arch: ice40
+fpga_info {
+  fpga_id: "ice40hx4k-tq144-8k"
+  part_num: "ICE40HX4K-TQ144"
+  size: "8k"
+  ice40_params {
+    type: "hx8k"
+    package: "tq144:4k"
+  }
+}
+environment {
+  platform_id: "darwin-arm64"
+  is_windows: false
+  terminal_mode: FORCE_TERMINAL
+  theme_name: "light"
+  yosys_path: "/Users/dhanush/.apio/packages/oss-cad-suite/share/yosys"
+  trellis_path: "/Users/dhanush/.apio/packages/oss-cad-suite/share/trellis"
+  scons_shell_id: "zsh"
+  xilinx_prjxray_db_path: "/Users/dhanush/.apio/packages/openxc7/share/nextpnr/external/prjxray-db"
+}
+apio_env_params {
+  env_name: "default"
+  board_id: "hailboard"
+  top_module: "blinky"
+}
+target {
+  upload {
+    programmer_cmd: "dfu-util -d 1209:E270 -a 0 -D $SOURCE"
+  }
+}
