@@ -13,8 +13,9 @@
 // Every button press makes the board send a "notice" to the laptop, so the
 // program feeding it orders (exchange --demo) can restart, pause or resume.
 module top #(
-    parameter CLKS_PER_BIT = 104,       // 12 MHz / 115200 baud
-    parameter TIMEOUT      = 120000,    // 10 ms
+    parameter USE_PLL      = 1,         // 0 = run straight off the pin (simulation)
+    parameter CLKS_PER_BIT = 417,       // 48 MHz / 115200 baud
+    parameter TIMEOUT      = 480000,    // 10 ms
     parameter HEX_FILE     = "../tables/softplus_tail.hex"
 ) (
     input  wire       CLOCK_12,
@@ -26,9 +27,22 @@ module top #(
     output wire [3:0] LEDG,
     output wire [3:0] LEDY
 );
-    wire clk = CLOCK_12;
-    wire por_rst;
-    por por_i (.clk(clk), .rst(por_rst));
+    // The board supplies 12 MHz; the PLL turns it into the 48 MHz everything
+    // else runs on. In simulation (USE_PLL = 0) the testbench clock is used
+    // directly, since the tick count is what is being checked, not its speed.
+    wire clk, pll_locked;
+    generate
+        if (USE_PLL) begin : g_pll
+            pll48 pll_i (.clk_12(CLOCK_12), .clk_48(clk), .locked(pll_locked));
+        end else begin : g_nopll
+            assign clk = CLOCK_12;
+            assign pll_locked = 1'b1;
+        end
+    endgenerate
+
+    wire por_done_rst;
+    por por_i (.clk(clk), .rst(por_done_rst));
+    wire por_rst = por_done_rst | !pll_locked;    // also wait for a stable clock
 
     // The buttons are not in step with the clock, so each goes through two
     // flip-flops before anything uses it. A third remembers the previous
@@ -55,11 +69,19 @@ module top #(
         sw_s3 <= sw_s2;
     end
     wire       sw_moved  = (sw_s2 != sw_s3);
-    wire       ui_enable = sw_s2[10];
-    wire [1:0] ui_lbm6   = (sw_s2[1:0] == 2'd3) ? 2'd2 : sw_s2[1:0];   // b = 64, 128, 256
-    wire [3:0] ui_lb     = {2'b00, ui_lbm6} + 4'd6;
-    wire [3:0] ui_ls     = (sw_s2[5:2] > ui_lb) ? ui_lb : sw_s2[5:2];  // size cannot exceed b
-    wire [3:0] ui_hs     = sw_s2[9:6];
+    // Turn the switch positions into settings, then hold them in registers so
+    // this logic does not add to the core's work within a clock tick.
+    wire [1:0] sw_lbm6 = (sw_s2[1:0] == 2'd3) ? 2'd2 : sw_s2[1:0];    // b = 64, 128, 256
+    wire [3:0] sw_lb   = {2'b00, sw_lbm6} + 4'd6;
+    reg        ui_enable = 0;
+    reg  [1:0] ui_lbm6 = 0;
+    reg  [3:0] ui_ls = 0, ui_hs = 0;
+    always @(posedge clk) begin
+        ui_enable <= sw_s2[10];
+        ui_lbm6   <= sw_lbm6;
+        ui_ls     <= (sw_s2[5:2] > sw_lb) ? sw_lb : sw_s2[5:2];        // size cannot exceed b
+        ui_hs     <= sw_s2[9:6];
+    end
 
     // ---- bytes in -> request ----
     wire [7:0] rx_data;

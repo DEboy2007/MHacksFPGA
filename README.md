@@ -16,7 +16,9 @@ All three produce identical quotes for the same order stream.
     make                      # build gen, exchange, mm_cpp
     make check                # same order streams into C++, Python and the FPGA; quotes must be identical
     fpga/run_tests.sh         # Verilog testbenches (Icarus Verilog)
-    python3 bench/run.py      # M5 benchmark; writes out/bench/index.html
+    python3 bench/run.py      # M5 benchmark; writes out/bench/index.html (add --fpga-port /dev/cu.usbmodem2103)
+    python3 tools/fee_sweep.py   # fee tuning: profit for every b and extra spread -> docs/fee_tuning.md
+    python3 golden/test_multi.py # multi-outcome LMSR prototype (software only) vs floating point
     open out/bench/index.html # M6 replay dashboard
     python3 -m pip install -r requirements-polymarket.txt
     python3 tools/polymarket_paper.py --seconds 60

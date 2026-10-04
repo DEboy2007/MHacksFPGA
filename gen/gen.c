@@ -4,7 +4,11 @@
  * one trader arriving with an intent. Whether it becomes a fill is decided at
  * replay time by the exchange, against whatever the market maker is quoting:
  *
- *   noise    trader: wants to buy or sell `qty` regardless of price.
+ *   noise    trader: wants to buy or sell `qty`. By default at any price;
+ *                    with -elastic W it has a private limit price, drawn
+ *                    within W cents of the truth, and walks away if the
+ *                    quote is worse than that. This is what makes a wider
+ *                    spread cost the market maker business.
  *   informed trader: knows the hidden true probability and trades only when
  *                    the quote is mispriced against it.
  *
@@ -36,7 +40,7 @@ static void put64(uint8_t *p, uint64_t v) { put32(p, (uint32_t)v); put32(p + 4, 
 static void usage(void) {
     fprintf(stderr,
         "usage: gen -o FILE [-n events] [-seed N] [-p0 prob] [-news AT:prob]\n"
-        "           [-informed frac] [-lb 6..8] [-ls 0..lb] [-hs 0..15]\n");
+        "           [-informed frac] [-elastic cents] [-lb 6..8] [-ls 0..lb] [-hs 0..15]\n");
     exit(2);
 }
 
@@ -44,7 +48,7 @@ int main(int argc, char **argv) {
     const char *out = NULL;
     uint32_t n = 5000, news_at = 0xFFFFFFFFu;
     uint64_t seed = 1;
-    double p0 = 0.5, p1 = 0.5, informed = 0.25;
+    double p0 = 0.5, p1 = 0.5, informed = 0.25, elastic = 0;
     int lb = 8, ls = 3, hs = 0;
 
     for (int i = 1; i < argc; i += 2) {
@@ -55,6 +59,7 @@ int main(int argc, char **argv) {
         else if (!strcmp(a, "-seed"))     seed = strtoull(v, NULL, 10);
         else if (!strcmp(a, "-p0"))       p0 = p1 = atof(v);
         else if (!strcmp(a, "-informed")) informed = atof(v);
+        else if (!strcmp(a, "-elastic"))  elastic = atof(v);
         else if (!strcmp(a, "-lb"))       lb = atoi(v);
         else if (!strcmp(a, "-ls"))       ls = atoi(v);
         else if (!strcmp(a, "-hs"))       hs = atoi(v);
@@ -63,12 +68,14 @@ int main(int argc, char **argv) {
         } else usage();
     }
     if (!out || lb < 6 || lb > 8 || ls < 0 || ls > lb || hs < 0 || hs > 15 ||
-        p0 <= 0 || p0 >= 1 || p1 <= 0 || p1 >= 1 || informed < 0 || informed > 1) usage();
+        p0 <= 0 || p0 >= 1 || p1 <= 0 || p1 >= 1 || informed < 0 || informed > 1 ||
+        elastic < 0 || elastic > 50) usage();
 
     rng_state = seed;
     uint32_t s = 1u << ls;
     uint32_t p0_bp = (uint32_t)(p0 * 10000 + 0.5), p1_bp = (uint32_t)(p1 * 10000 + 0.5);
     uint32_t informed_ppm = (uint32_t)(informed * 1000000 + 0.5);
+    uint32_t elastic_bp = (uint32_t)(elastic * 100 + 0.5);
     uint32_t final_bp = (news_at < n) ? p1_bp : p0_bp;
     uint8_t outcome = rng_below(10000) < final_bp;          /* 1 = YES happens */
 
@@ -95,7 +102,14 @@ int main(int argc, char **argv) {
         ev[0] = (uint8_t)is_informed;
         ev[1] = is_informed ? 0 : (uint8_t)side;             /* informed: side decided at replay */
         put16(ev + 2, is_informed ? s : qty);
-        put16(ev + 4, i >= news_at ? p1_bp : p0_bp);         /* truth, in 1/100 cent */
+        uint32_t truth_bp = i >= news_at ? p1_bp : p0_bp;
+        put16(ev + 4, truth_bp);                             /* truth, in 1/100 cent */
+        if (elastic_bp > 0 && !is_informed) {                /* noise trader's limit price */
+            int32_t limit = (int32_t)truth_bp - (int32_t)elastic_bp + (int32_t)rng_below(2 * elastic_bp + 1);
+            if (limit < 1) limit = 1;
+            if (limit > 9999) limit = 9999;
+            put16(ev + 6, (uint32_t)limit);                  /* 0 would mean "any price" */
+        }
         fwrite(ev, 1, sizeof ev, f);
     }
     if (fclose(f) != 0) { perror(out); return 1; }

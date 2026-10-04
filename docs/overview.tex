@@ -224,7 +224,7 @@ chip \emph{becomes} that circuit. Trading firms use FPGAs for two reasons:
 
 We are not claiming the FPGA is faster at the arithmetic. Our pricing step is
 tiny, and a laptop processor runs billions of operations per second, while our
-hobby-grade FPGA board runs at 12 million clock ticks per second. On the
+hobby-grade FPGA board runs at 48 million clock ticks per second. On the
 \emph{typical} request we expect the C++ program to win.
 
 The FPGA's advantage is consistency. In trading, the slow cases matter most:
@@ -349,6 +349,10 @@ inexpensive chip with no multipliers and about 16 kilobytes of on-chip memory.
 It talks to the laptop over a serial link at 115{,}200 bits per second. The
 design is written in Verilog, a language for describing circuits.
 
+The board supplies a 12 MHz clock. An on-chip clock multiplier (a PLL) turns
+that into 48 MHz, so the circuit takes 48 million steps per second and each
+step lasts about 21 nanoseconds.
+
 \subsection{The pipeline}
 
 The circuit is a chain of small modules. Bytes arrive from the laptop, become
@@ -396,10 +400,10 @@ counts how many clock ticks each request takes. \\
 \end{tabularx}
 \end{table}
 
-\subsection{Inside the pricing core: seven clock ticks}
+\subsection{Inside the pricing core: eight clock ticks}
 
-A digital circuit advances in steps driven by a clock; ours ticks 12 million
-times a second. The pricing core handles every request in exactly seven ticks:
+A digital circuit advances in steps driven by a clock. The pricing core handles
+every request in exactly eight ticks:
 
 \begin{enumerate}
   \item Apply the request: update $d$ for a trade, or change a setting.
@@ -408,22 +412,24 @@ times a second. The pricing core handles every request in exactly seven ticks:
   \item Ask for the value at $d + s$. The second answer arrives.
   \item The third answer arrives.
   \item Subtract: the upper difference gives the ask, the lower gives the bid.
-  \item Shift, round to cents, add any extra spread, and decide whether each
-        side should be withdrawn.
+  \item Shift (the multiply by $b/s$) and round to whole cents.
+  \item Add any extra spread and decide whether each side should be withdrawn.
 \end{enumerate}
 
 The three lookups happen on separate ticks because the chip's memory answers
-one question per tick. Splitting the work into small steps also keeps each
-step short enough to finish comfortably within one tick.
+one question per tick. The work is split into small steps so that each one
+finishes comfortably inside a 21-nanosecond tick; that is what allows the fast
+clock.
 
-One more tick is spent checking the incoming message, giving \textbf{8 ticks
-in total, or 667 nanoseconds}, for every request without exception. There is
+One more tick is spent checking the incoming message, giving \textbf{9 ticks
+in total, or 188 nanoseconds}, for every request without exception. There is
 no branch in the circuit that could make one request take longer than another.
 
 \subsection{Board controls}
 
 The eight-digit display shows the bid, the ask, and the number of trades so
-far. Four push buttons control a live demonstration:
+far, in decimal; a withdrawn price shows as dashes. Four push buttons control
+a live demonstration:
 
 \begin{center}
 \begin{tabular}{ll}
@@ -444,10 +450,16 @@ erasing the current position. The trades themselves are stored on the laptop,
 so the restart, pause and resume buttons work by sending a short message to
 the laptop program that feeds the board.
 
+The slide switches can take over the settings: with switch 17 up, other
+switches choose $b$, the quote size and the extra spread, and the prices on
+the display change the moment a switch moves.
+
 % ---------------------------------------------------------------------------
-\section{Results so far}
+\section{Results}
 
 Everything in this section has been measured. Nothing is estimated.
+
+\subsection{Correctness}
 
 \begin{itemize}
   \item \textbf{Accuracy.} Across all 60{,}392 combinations of settings and
@@ -460,29 +472,144 @@ Everything in this section has been measured. Nothing is estimated.
   \item \textbf{Identical trading runs.} Four full simulated markets, between
         1{,}290 and 3{,}297 trades each, produce byte-for-byte identical
         streams of prices from all three.
-  \item \textbf{FPGA timing.} On the real board, every one of those replies
-        reported a compute time of exactly 8 clock ticks (667 ns).
-  \item \textbf{Size.} The design uses 1{,}546 of the chip's 7{,}680 logic
+  \item \textbf{Size.} The design uses 2{,}011 of the chip's 7{,}680 logic
         cells and 12 of its 32 memory blocks. The tools estimate it could run
-        at about 49 million ticks per second, four times the speed it needs.
+        at about 59 MHz, comfortably above the 48 MHz it needs.
 \end{itemize}
 
 The FPGA design was first checked in simulation, where a test program plays
 the role of the laptop and compares every reply against the Python reference,
 and only then loaded onto the board and checked again.
 
+\subsection{Tick-to-quote latency}
+
+Table~\ref{tab:latency} is the main result. ``p99'' means 99\% of replies were
+at least this fast; ``max'' is the single slowest reply. The last column is
+the slowest reply divided by the typical one: a measure of jitter.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrrr}
+\toprule
+Version & Median & p99 & p99.9 & Max & Max $\div$ median \\
+\midrule
+FPGA   & 188 ns     & 188 ns     & 188 ns     & 188 ns     & 1$\times$ \\
+C++    & 41 ns      & 209 ns     & 417 ns     & 1{,}542 ns & 38$\times$ \\
+Python & 2{,}542 ns & 10{,}500 ns & 19{,}833 ns & 29{,}334 ns & 12$\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Compute time per reply. C++ and Python: 3{,}262 replies each, with
+requests arriving at 400 per second. FPGA: 9 clock ticks at 48 MHz on every
+one of 6{,}971 replies on the real board. (In the 400-per-second run itself,
+made before the clock was raised from 12 MHz, the FPGA took 8 ticks = 667 ns
+on all 3{,}262 replies.)}
+\label{tab:latency}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  width=0.9\textwidth, height=5.2cm,
+  xmode=log, xmin=10, xmax=100000,
+  ymin=0.4, ymax=3.6,
+  ytick={1,2,3}, yticklabels={Python, C++, FPGA},
+  xtick={10,100,1000,10000,100000},
+  xticklabels={10 ns, 100 ns, 1 \textmu s, 10 \textmu s, 100 \textmu s},
+  xmajorgrids, grid style={gray!25}, y tick style={draw=none},
+  tick label style={font=\small},
+  legend style={at={(0.5,-0.22)}, anchor=north, legend columns=4, draw=none, font=\small,
+                /tikz/every even column/.append style={column sep=10pt}},
+  clip=false,
+]
+\addplot[accent, thick, forget plot] coordinates {(41,2) (1542,2)};
+\addplot[accent, thick, forget plot] coordinates {(2542,1) (29334,1)};
+\addplot[only marks, mark=*, mark size=2.6pt, accent] coordinates {(188,3) (41,2) (2542,1)};
+\addplot[only marks, mark=diamond*, mark size=3pt, accent] coordinates {(209,2) (10500,1)};
+\addplot[only marks, mark=triangle*, mark size=3pt, accent] coordinates {(417,2) (19833,1)};
+\addplot[only marks, mark=square*, mark size=2.2pt, accent] coordinates {(1542,2) (29334,1)};
+\legend{median, p99, p99.9, max}
+\node[anchor=west, font=\small] at (axis cs:230,3) {188 ns on every reply};
+\node[anchor=south, font=\small] at (axis cs:41,2.12) {41 ns};
+\node[anchor=west, font=\small] at (axis cs:1900,2) {1{,}542 ns};
+\node[anchor=south, font=\small] at (axis cs:2542,1.12) {2{,}542 ns};
+\node[anchor=south, font=\small] at (axis cs:29334,1.12) {29{,}334 ns};
+\end{axis}
+\end{tikzpicture}
+\caption{The same numbers on a logarithmic axis. Each software version is a
+line from its typical reply to its slowest. The FPGA is a single point.}
+\label{fig:latency}
+\end{figure}
+
+How to read it:
+
+\begin{itemize}
+  \item \textbf{C++ is fastest on a typical request}, about 4.6 times faster
+        than the FPGA. (41 ns is one tick of the laptop's timer, so the true
+        figure is at or below that.) This is what we expected.
+  \item \textbf{C++ is not fastest on its worst request.} Its slowest reply
+        took 1{,}542 ns, about 8 times slower than the FPGA's.
+  \item \textbf{The FPGA has no spread at all.} Typical and worst case are the
+        same 9 ticks.
+  \item \textbf{Python} is slower than the FPGA throughout, by about 13.5 times on a
+        typical request and 156 times on its slowest.
+\end{itemize}
+
+The software numbers were taken on an otherwise idle laptop. A busy machine
+would lengthen the software tails and leave the FPGA unchanged; we did not
+measure that.
+
+\subsection{Choosing the fee}
+
+The market maker can add an extra spread on top of what LMSR gives. A wider
+spread earns more per trade but drives customers away. To find the balance we
+gave noise traders a private limit price (within 10\cent{} of the true
+probability) and ran every combination of $b$ and extra spread over 20
+different simulated markets of 4{,}000 trader arrivals each.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{crrr}
+\toprule
+Extra spread per side & $b = 64$ & $b = 128$ & $b = 256$ \\
+\midrule
+0\cent & \$44 (1{,}337) & \$28 (1{,}394) & \$5 (1{,}415) \\
+2\cent & \$112 (916)    & \$106 (999)    & \$93 (1{,}061) \\
+4\cent & \$124 (602)    & \textbf{\$133 (704)} & \$131 (776) \\
+6\cent & \$95 (332)     & \$116 (432)    & \$123 (507) \\
+8\cent & \$10 (41)      & \$47 (154)     & \$70 (244) \\
+\bottomrule
+\end{tabular}
+\caption{Average profit, with the average number of trades in brackets, when
+30\% of traders are informed. Full results for 10\%, 30\% and 50\% informed
+are in \code{docs/fee\_tuning.md}.}
+\end{table}
+
+Profit peaks at about 4\cent{} of extra spread per side with $b = 128$, and
+the same setting is best at all three informed-trader levels we tried. With no
+extra spread the market maker barely breaks even; beyond 6\cent{} it has
+priced itself out of the market.
+
+\subsection{More than two outcomes}
+
+Real prediction markets often have several outcomes (``who wins the
+election?''). As a software prototype we extended the same arithmetic to $N$
+outcomes: the general LMSR formula can be built up two outcomes at a time, and
+each step uses the same kind of lookup table as the two-outcome design, plus
+one small multiplication. For two outcomes it reproduces the main design's
+quotes exactly (2{,}201 of 2{,}201 compared). For up to eight outcomes its
+prices stay within 0.07\cent{} of the exact formula. This version runs in
+Python only; it has not been built on the FPGA.
+
 \subsection*{What comes next}
 
 \begin{itemize}
-  \item \textbf{The latency benchmark.} Run all three at the same pace, record
-        the full distribution of compute times (typical, 99th percentile,
-        99.9th percentile, worst), and repeat with the laptop under heavy
-        load. This produces the jitter comparison that is the point of the
-        project.
-  \item \textbf{Demonstration polish.} Decimal prices on the display, switches
-        to change settings, and a dashboard plotting the market maker's price
-        against the hidden true probability, together with its inventory and
-        profit.
+  \item \textbf{Live market data.} The market maker can already take a
+        reference price from a real Polymarket market and quote around it
+        without placing real orders. This path has been unit-tested but not
+        yet run end to end on the board.
+  \item \textbf{Latency under load.} Repeat the benchmark with the laptop
+        busy, to show the software tails growing while the FPGA stays fixed.
 \end{itemize}
 
 \end{document}

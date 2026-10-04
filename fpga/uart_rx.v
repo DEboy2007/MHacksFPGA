@@ -2,7 +2,7 @@
 //
 // The line idles high. A byte is: one low "start" bit, 8 data bits (least
 // significant first), one high "stop" bit. Each bit lasts CLKS_PER_BIT clock
-// ticks (12 MHz / 115200 baud = 104). We find the falling edge of the start
+// ticks (104 at 12 MHz; top.v passes 417 for its 48 MHz clock). We find the falling edge of the start
 // bit, wait half a bit to land in the MIDDLE of it, then sample once per bit
 // period so every sample is taken where the line is most stable.
 module uart_rx #(parameter CLKS_PER_BIT = 104) (

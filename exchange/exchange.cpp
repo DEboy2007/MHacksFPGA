@@ -284,7 +284,7 @@ private:
 
 // ---- event file (docs/spec.md section 11) --------------------------------------
 
-struct Event { uint8_t informed, side; uint16_t qty, truth_bp; };
+struct Event { uint8_t informed, side; uint16_t qty, truth_bp, limit_bp; };
 
 struct EventFile {
     uint16_t config = 0;
@@ -313,7 +313,8 @@ static EventFile load_events(const std::string& path) {
     for (uint32_t i = 0; i < n; i++) {
         uint8_t e[8];
         if (fread(e, 1, 8, f) != 8) die("event file truncated");
-        ef.events[i] = {e[0], e[1], static_cast<uint16_t>(le(e + 2, 2)), static_cast<uint16_t>(le(e + 4, 2))};
+        ef.events[i] = {e[0], e[1], static_cast<uint16_t>(le(e + 2, 2)), static_cast<uint16_t>(le(e + 4, 2)),
+                        static_cast<uint16_t>(le(e + 6, 2))};
     }
     fclose(f);
     return ef;
@@ -350,8 +351,10 @@ static void run(Session& ses, const EventFile& ef, FILE* lf, bool show) {
         if (e.informed) {
             if (q.ask && q.ask * 100 < e.truth_bp)      action = 1;   // YES is cheap
             else if (q.bid && q.bid * 100 > e.truth_bp) action = 2;   // YES is dear
-        } else if ((e.side == 1 && q.ask) || (e.side == 2 && q.bid)) {
-            action = e.side;
+        } else if (e.side == 1 && q.ask && (!e.limit_bp || q.ask * 100 <= e.limit_bp)) {
+            action = 1;                   // noise buyer: any price, or within its limit
+        } else if (e.side == 2 && q.bid && (!e.limit_bp || q.bid * 100 >= e.limit_bp)) {
+            action = 2;                   // noise seller
         }
 
         int px = 0;

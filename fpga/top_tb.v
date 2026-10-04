@@ -27,13 +27,14 @@ module top_tb;
     wire [6:0] hex_f [0:7], hex_r [0:7];
     wire [6:0] ledr_f, ledr_r;
     wire [3:0] ledg_f, ledg_r;
-    top #(.CLKS_PER_BIT(8), .TIMEOUT(400)) dut_fast
+    top #(.USE_PLL(0), .CLKS_PER_BIT(8), .TIMEOUT(400)) dut_fast
         (.CLOCK_12(clk), .PICO(pico_f), .KEY(key),
          .SW(sw),
          .HEX0(hex_f[0]), .HEX1(hex_f[1]), .HEX2(hex_f[2]), .HEX3(hex_f[3]),
          .HEX4(hex_f[4]), .HEX5(hex_f[5]), .HEX6(hex_f[6]), .HEX7(hex_f[7]),
          .LEDR(ledr_f), .LEDG(ledg_f));
-    top dut_real
+    // 12 MHz testbench clock, so 104 clocks per bit here (the board uses 417 at 48 MHz)
+    top #(.USE_PLL(0), .CLKS_PER_BIT(104), .TIMEOUT(120000)) dut_real
         (.CLOCK_12(clk), .PICO(pico_r), .KEY(4'b1111),
          .SW(18'd0),
          .HEX0(hex_r[0]), .HEX1(hex_r[1]), .HEX2(hex_r[2]), .HEX3(hex_r[3]),

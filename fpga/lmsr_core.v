@@ -2,7 +2,7 @@
 // Follows docs/spec.md sections 3 and 4 exactly; golden/lmsr_mm.py is the
 // reference. No multipliers or dividers: only adds, shifts and one table.
 //
-// One request takes a fixed 7 clocks from req_valid to resp_valid:
+// One request takes a fixed 8 clocks from req_valid to resp_valid:
 //
 //   IDLE   apply the request (update d / config) using the quote we hold
 //   RD_M   send table address for k-      (k- , k0, k+ = d-s, d, d+s scaled)
@@ -10,7 +10,12 @@
 //   RD_P   send address for k+;  G[k0] arrives -> save H(k0)
 //   GET_P                        G[k+] arrives -> save H(k+)
 //   DIFF   ask_diff = H(k+) - H(k0),  bid_diff = H(k0) - H(k-)
-//   ROUND  shift, round to cents, add spread, apply pull rules -> new quote
+//   SHIFT  multiply by b/s (a shift) and round to whole cents
+//   ROUND  add spread and reference, apply pull rules -> new quote
+//
+// SHIFT and ROUND were one step at 12 MHz. At 48 MHz a clock tick is only
+// 20.8 ns, too short for a wide shifter, an adder and the range checks in a
+// row, so the work is split across two ticks with a register in between.
 //
 // There is one block RAM table with one read port, so the three lookups
 // happen on three consecutive clocks. Each step's result is stored in a
@@ -52,7 +57,7 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
                EVT_REQUOTE = 8'h84;   // the switches moved: work out the quote again
 
     localparam S_IDLE = 3'd0, S_RD_M = 3'd1, S_RD_0 = 3'd2, S_RD_P = 3'd3,
-               S_GET_P = 3'd4, S_DIFF = 3'd5, S_ROUND = 3'd6;
+               S_GET_P = 3'd4, S_DIFF = 3'd5, S_ROUND = 3'd6, S_SHIFT = 3'd7;
     reg [2:0] state;
     reg       ok_r;        // was the request accepted
     reg [2:0] cmd_r;
@@ -112,8 +117,10 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
     wire [34:0] ask_sh = {8'd0, ask_diff} << up;
     wire [34:0] bid_sh = {8'd0, bid_diff} << up;
     wire [24:0] ask_ceil = {1'b0, ask_sh[23:0]} + 25'd65535;       // ceil
-    wire signed [9:0] ask_c = {1'b0, ask_ceil[24:16]} + {6'd0, hs_eff};
-    wire signed [9:0] bid_c = {2'b00, bid_sh[23:16]} - {6'd0, hs_eff}; // floor
+    reg  [8:0]  ask_raw;         // ask in whole cents, before spread (rounded up)
+    reg  [7:0]  bid_raw;         // bid in whole cents, before spread (rounded down)
+    wire signed [9:0] ask_c = {1'b0, ask_raw} + {6'd0, hs_eff};
+    wire signed [9:0] bid_c = {2'b00, bid_raw} - {6'd0, hs_eff};
     // REFERENCE (spec section 4): a side that is live on its own is moved by
     // (reference - 50) cents, and pulled if that takes it outside 1..99.
     wire signed [9:0] ref_shift = $signed({3'b000, reference}) - 10'sd50;
@@ -197,7 +204,12 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
             S_DIFF: begin
                 ask_diff <= hp - h0;
                 bid_diff <= h0 - hm;
-                state    <= S_ROUND;
+                state    <= S_SHIFT;
+            end
+            S_SHIFT: begin
+                ask_raw <= ask_ceil[24:16];
+                bid_raw <= bid_sh[23:16];
+                state   <= S_ROUND;
             end
             S_ROUND: begin
                 ask_px     <= ask_live ? ask_ref[6:0] : 7'd0;

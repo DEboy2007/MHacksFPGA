@@ -20,7 +20,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "golden"))
 from lmsr_mm import LmsrMM, encode_request, xor8, OUT_LEN, CMD_RESET, CMD_CONFIG, pack_config  # noqa: E402
 
-CLK_NS = 1e9 / 12e6
+CLK_NS = 1e9 / 48e6      # the FPGA runs at 48 MHz
 
 class SerialLink:
     unit = "clocks"

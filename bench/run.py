@@ -117,6 +117,7 @@ def main():
             result["latency"]["p99"], result["latency"]["p99_9"],
             result["latency"]["max"], result["latency_unit"]))
     data = {"events": str(events.relative_to(ROOT)), "rate": args.rate,
+            "fpga_clock_hz": 48e6,
             "generated_at": time.time(), "quote_agreement": agreement,
             "results": results}
     (out / "results.json").write_text(json.dumps(data, indent=2) + "\n")

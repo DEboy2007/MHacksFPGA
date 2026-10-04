@@ -183,8 +183,10 @@ Measured by `golden/test_ref.py` over every `(LB, LS, d)`:
 
 - **FPGA:** clock cycles from the UART receiver delivering the request's last
   byte (it samples the middle of the stop bit) to the reply frame being ready
-  to transmit. One cycle is 83.33 ns at 12 MHz. Measured on the board: always
-  **8 cycles = 667 ns** (1 to check the frame, 7 in the quote core).
+  to transmit. The design runs at 48 MHz from the on-chip PLL, so one cycle is
+  20.83 ns. Measured on the board: always **9 cycles = 188 ns** (1 to check
+  the frame, 8 in the quote core). Before the PLL, at 12 MHz, it was 8 cycles
+  = 667 ns.
 - **C++ / Python:** nanoseconds from the last request byte being returned by
   the read call to the reply being ready, measured before the write.
   Timer: `clock_gettime_nsec_np(CLOCK_UPTIME_RAW)`; its resolution is reported
@@ -214,8 +216,6 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
 
 - The three lookups (`km`, `k0`, `kp`) come from one BRAM on consecutive
   cycles; this sets the pipeline depth and therefore the fixed cycle count.
-- Build (nextpnr, 12 MHz clock): 1,445 of 7,680 logic cells, 12 of 32 BRAMs,
-  estimated maximum clock 46.9 MHz.
 - The FPGA UART is `/dev/cu.usbmodem2103`. The RP2040 bridge drops bytes when
   more than about 32 are in flight in both directions at once; the
   one-request-then-one-reply rule in section 6 stays far below that.
@@ -224,8 +224,9 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
   to `LB`), and SW9:6 selects `hs` in cents. With SW17 down, host CONFIG
   messages have full control. The switches have no kill function.
 - LEDY3..0 show: switches enabled (SW17), kill, core busy, byte received.
-- Build (buttons, switches, decimal displays): 2,010 logic cells, estimated
-  maximum clock 46.0 MHz.
+- Clock: the board's 12 MHz is multiplied to 48 MHz by a PLL (`fpga/pll48.v`).
+  Place-and-route is constrained to 48 MHz (`--freq 48` in `apio.ini`).
+- Build: 2,011 logic cells, 12 BRAMs, 1 PLL; estimated maximum clock 59 MHz.
 - **Displays** are decimal: HEX7-6 bid, HEX5-4 ask (`--` when pulled), HEX3-0
   accepted fills, wrapping from 9999 to 0000. `make demo` streams 9,999 orders
   so the count never wraps during a demo.
@@ -278,11 +279,13 @@ Event, 8 bytes: one trader arriving.
 | 1 | 1 | noise only: 1 = wants to buy YES, 2 = wants to sell |
 | 2 | 2 | `qty` (noise: 1..s, informed: s) |
 | 4 | 2 | truth at this moment, in 1/100 cent |
-| 6 | 2 | zero |
+| 6 | 2 | noise only: limit price in 1/100 cent, 0 = trades at any price |
 
 What the exchange does with an event, given the current quote:
 
-- **Noise:** trades `qty` on its side if that side is live, otherwise nothing.
+- **Noise:** trades `qty` on its side if that side is live and, when it has a
+  limit price, the quote is no worse than the limit (`ask * 100 <= limit` to
+  buy, `bid * 100 >= limit` to sell). Otherwise nothing.
 - **Informed:** buys if the ask is live and `ask * 100 < truth`; otherwise
   sells if the bid is live and `bid * 100 > truth`; otherwise nothing.
 
