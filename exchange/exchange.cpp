@@ -234,6 +234,7 @@ public:
             try { poll_notices(1000); } catch (const Restarted&) { return; }
         }
     }
+    void drain() { tr.drain(); }
     void set_rate(double rate) { gap_ns = rate > 0 ? static_cast<uint64_t>(1e9 / rate) : 0; }
 
     Quote last;                 // the market maker's latest quote, from replies and notices
@@ -399,7 +400,13 @@ static void run(Session& ses, const EventFile& ef, FILE* lf, bool show) {
 //   TRADE <price> <size>       (observation only; never a fill)
 //   STALE / FRESH
 static void run_live(Session& ses, LineSource& source) {
+    // Tolerate the board's buttons: KEY1 (kill) and KEY0 (restart) work during
+    // a live session. Pause/resume have no meaning for a live feed.
+    ses.demo = true;
+    try { ses.request(CMD_RESET, 0); } catch (const Restarted&) { ses.drain(); }
+
     bool fresh = false;
+    int shown_ref = -1, shown_bid = -1, shown_ask = -1;
     std::string line;
     while (source.read_line(line)) {
         double bid, bid_size, ask, ask_size;
@@ -413,25 +420,41 @@ static void run_live(Session& ses, LineSource& source) {
                    &bid, &bid_size, &ask, &ask_size) != 4) continue;
         if (bid < 0 || ask > 1 || bid > ask) { fresh = false; continue; }
         const int ref = std::max(0, std::min(100, static_cast<int>((bid + ask) * 50.0)));
-        Quote q = ses.request(CMD_REFERENCE, static_cast<uint16_t>(ref));
-        if (!fresh) continue;
-        int action = 0;
-        int qty = 0;
-        if (q.ask && bid >= q.ask / 100.0) {
-            action = 1;
-            qty = std::min(8, static_cast<int>(bid_size));
-        } else if (q.bid && ask <= q.bid / 100.0) {
-            action = 2;
-            qty = std::min(8, static_cast<int>(ask_size));
-        }
-        if (action && qty > 0) {
-            const int before = q.d;
-            q = ses.request(action == 1 ? CMD_BUY : CMD_SELL, static_cast<uint16_t>(qty));
-            if (!(q.status & 1) || q.d == before) continue;
-            printf("live fill %s %d @ %d cents, d=%d\n",
-                   action == 1 ? "buy_yes" : "sell_yes", qty,
-                   action == 1 ? q.ask : q.bid, q.d);
+        try {
+            Quote q = ses.request(CMD_REFERENCE, static_cast<uint16_t>(ref));
+            if (ref != shown_ref || q.bid != shown_bid || q.ask != shown_ask) {
+                printf("market %5.1f / %5.1f cents  ->  reference %2d, our quote %2d / %2d\n",
+                       bid * 100, ask * 100, ref, q.bid, q.ask);
+                fflush(stdout);
+                shown_ref = ref; shown_bid = q.bid; shown_ask = q.ask;
+            }
+            if (!fresh) continue;
+            int action = 0;
+            int qty = 0;
+            if (q.ask && bid >= q.ask / 100.0) {
+                action = 1;
+                qty = std::min(8, static_cast<int>(bid_size));
+            } else if (q.bid && ask <= q.bid / 100.0) {
+                action = 2;
+                qty = std::min(8, static_cast<int>(ask_size));
+            }
+            if (action && qty > 0) {
+                const int before = q.d;
+                const int px = action == 1 ? q.ask : q.bid;
+                q = ses.request(action == 1 ? CMD_BUY : CMD_SELL, static_cast<uint16_t>(qty));
+                if (!(q.status & 1) || q.d == before) continue;
+                printf("live fill %s %d @ %d cents, d=%d\n",
+                       action == 1 ? "buy_yes" : "sell_yes", qty, px, q.d);
+                fflush(stdout);
+            }
+        } catch (const Restarted& r) {
+            // KEY0: the board reset itself (inventory 0, reference 50). Clear
+            // any half-read reply; the next book update sets the reference again.
+            printf(r.notice_seen ? "-- board restarted (KEY0) --\n"
+                                 : "-- no reply from the board for 0.5 s (KEY0 held?) --\n");
             fflush(stdout);
+            ses.drain();
+            shown_ref = -1;
         }
     }
 }

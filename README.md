@@ -25,6 +25,7 @@ All three produce identical quotes for the same order stream.
     exchange/exchange --source 'cmd:python3 tools/polymarket_paper.py --exchange-source' --mm cmd:mm_cpp/mm_cpp
     cd fpga && apio upload    # build and flash the market maker
     python3 tools/replay.py   # golden vectors against the board (--cmd mm_cpp/mm_cpp for software)
+    make live                 # board quotes around a real Polymarket market (MM=cmd:mm_cpp/mm_cpp for software, MARKET=slug to choose)
     make demo                 # then press KEY0: replays a fixed 9999-order stream (RATE=200 orders/s; lower it to watch single trades)
 
 The FPGA's serial port is `/dev/cu.usbmodem2103`.
@@ -38,19 +39,25 @@ switches-enabled, kill, core-busy and UART activity.
 The displays are decimal: bid, ask (`--` when pulled), then the fill count.
 
 The Polymarket command discovers the highest-24-hour-volume active binary
-market with an order book, subscribes to its public market WebSocket, and
+market with an order book whose price is between 15 and 85 cents (or the one
+named with `--market SLUG`), subscribes to its public market WebSocket, and
 simulates local resting bid/ask orders. It starts with $100,000,000 paper cash
 by default (`--cash` changes this), and never sends authenticated orders or
 requires a wallet/private key. `--seconds` is useful for a bounded smoke test;
 without it the stream runs continuously.
 
-For live routing into an existing MM transport, `--exchange-source` emits
-normalized YES `FRESH`/`STALE` and `BOOK` lines. `exchange --source` consumes
-those lines, sends `CMD_REFERENCE` using the YES book midpoint, and only sends
-BUY/SELL requests when the external book crosses the MM's simulated resting
-quote. `TRADE` observations are intentionally not fill events. Replace
-`cmd:mm_cpp/mm_cpp` with `cmd:mm_py/main.py` or
-`serial:/dev/cu.usbmodem2103` to select the C++, Python, or FPGA MM.
+For live routing into a market maker, `--exchange-source` emits normalized YES
+`FRESH`/`STALE` and `BOOK` lines. `exchange --source` consumes those lines,
+resets the market maker, sends `CMD_REFERENCE` with the YES book midpoint on
+every update, and prints a line whenever the market or our quote changes. It
+only sends BUY/SELL when the external book crosses the MM's quote, which is
+rare because the quote re-centres on every update, so the fill count usually
+stays at zero. `TRADE` observations are intentionally not fill events.
+`make live` runs this against the board; `MM=cmd:mm_cpp/mm_cpp` or
+`MM='cmd:python3 mm_py/main.py'` selects a software market maker.
+
+In live mode KEY1 (kill) and KEY0 (restart) work; KEY3/KEY2 (pause/resume) do
+nothing, since a live feed cannot be paused.
 
 Board buttons (the order feed lives on the laptop, so `make demo` must be running for KEY0/KEY2/KEY3 to do anything visible):
 

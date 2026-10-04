@@ -38,7 +38,10 @@ def parse_json_field(value):
     return json.loads(value) if isinstance(value, str) else value
 
 
-def discover_market():
+def discover_market(slug=None):
+    """Pick the market to follow: the one named by `slug`, otherwise the
+    busiest binary market whose price is in a range our whole-cent quotes can
+    do something with (a market at 0.3 cents would just have its quotes pulled)."""
     query = urllib.parse.urlencode({
         "active": "true", "closed": "false", "limit": "100",
         "order": "volume24hr", "ascending": "false",
@@ -60,7 +63,21 @@ def discover_market():
             eligible.append(market)
     if not eligible:
         raise RuntimeError("no active binary order-book market found")
-    return max(eligible, key=lambda item: float(item.get("volume24hr") or 0))
+    if slug:
+        named = [m for m in eligible if m.get("slug") == slug]
+        if not named:
+            raise RuntimeError(f"market {slug!r} is not among the 100 busiest binary markets")
+        return named[0]
+
+    def quotable(market):
+        try:
+            bid, ask = float(market.get("bestBid")), float(market.get("bestAsk"))
+        except (TypeError, ValueError):
+            return False
+        return 0.15 <= (bid + ask) / 2 <= 0.85 and ask - bid <= 0.05
+
+    preferred = [m for m in eligible if quotable(m)] or eligible
+    return max(preferred, key=lambda item: float(item.get("volume24hr") or 0))
 
 
 def fetch_book(token_id):
@@ -213,7 +230,7 @@ class PaperTrader:
 
 
 def run(args):
-    market = discover_market()
+    market = discover_market(args.market)
     token = market["_tokens"]["YES"]
     print(json.dumps({
         "type": "market", "id": market["id"], "condition_id": market["conditionId"],
@@ -315,6 +332,9 @@ def main():
     parser.add_argument("--lb", type=int, default=8)
     parser.add_argument("--ls", type=int, default=3)
     parser.add_argument("--hs", type=int, default=0)
+    parser.add_argument("--market", metavar="SLUG",
+                        help="follow this market (the last part of its polymarket.com URL) "
+                             "instead of the busiest one priced between 15 and 85 cents")
     parser.add_argument("--seconds", type=float,
                         help="stop after this many seconds; default is continuous")
     parser.add_argument("--stale-after", type=float, default=30.0,

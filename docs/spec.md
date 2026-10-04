@@ -247,9 +247,15 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
 - A notice and a reply never overlap on the wire. If a request arrives while a
   notice is being sent it waits and is answered afterwards (its latency field
   then includes the wait). This only happens when a button is pressed.
-- `exchange --demo` acts on notices (restart, pause, resume, kill). Outside
-  demo mode any notice during a run is an error, so benchmark runs cannot be
-  silently disturbed by a button.
+- `exchange --demo` acts on notices (restart, pause, resume, kill). In a
+  replayed run outside demo mode any notice is an error, so benchmark runs
+  cannot be silently disturbed by a button.
+- Live mode (`exchange --source`, `make live`) sends RESET first, then one
+  REFERENCE per order-book update. It accepts the kill and restart notices
+  (after a restart the next update sets the reference again); pause and resume
+  are ignored, since a live feed cannot be paused. Verified on the board
+  against a live Polymarket market: quotes 63 / 65 around a 64.2 / 65.3 book,
+  9 clocks per reply.
 
 ## 11. Order-flow file
 

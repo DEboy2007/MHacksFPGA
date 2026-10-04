@@ -603,13 +603,22 @@ quotes exactly (2{,}201 of 2{,}201 compared). For up to eight outcomes its
 prices stay within 0.07\cent{} of the exact formula. This version runs in
 Python only; it has not been built on the FPGA.
 
+\subsection{A real market}
+
+The board can also follow a real prediction market. A small program reads the
+public price feed of a market on Polymarket (it only reads; no orders are
+placed and no account is needed) and tells the market maker the current price.
+The market maker shifts its quotes to sit around that price, and the board's
+display tracks the real market. In our test, with the real market at
+64.2\cent{} / 65.3\cent{}, the board quoted 63\cent{} / 65\cent{}, taking the
+same 9 clock ticks per update as in simulation.
+
 \subsection*{What comes next}
 
 \begin{itemize}
-  \item \textbf{Live market data.} The market maker can already take a
-        reference price from a real Polymarket market and quote around it
-        without placing real orders. This path has been unit-tested but not
-        yet run end to end on the board.
+  \item \textbf{Trading against live data.} See below: the board already
+        follows a real market's price, but it does not yet trade against it
+        in a way that produces fills and a profit figure.
   \item \textbf{Latency under load.} Repeat the benchmark with the laptop
         busy, to show the software tails growing while the FPGA stays fixed.
 \end{itemize}
