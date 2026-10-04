@@ -19,15 +19,15 @@ Trading firms put their fastest logic on FPGAs, and the reason is less about raw
 
 A market maker always posts a price it will buy at and a price it will sell at, and updates both after every trade. Ours prices a yes/no market with the Logarithmic Market Scoring Rule (LMSR), a standard rule where the more "yes" it has sold, the higher it quotes, and its worst-case loss is capped. We built the same market maker three times: as a circuit on a small FPGA board, in C++, and in Python. All three produce identical prices for the same stream of trades, so the only thing left to compare is time.
 
-The whole state of the market maker is one number, $d$, the net number of "yes" shares it has sold. With a liquidity setting $b$, the fair price of a "yes" share and the cost function behind it are
+The whole state of the market maker is one number, \(d\), the net number of "yes" shares it has sold. With a liquidity setting \(b\), the fair price of a "yes" share and the cost function behind it are
 
 $$p(d) = \frac{1}{1 + e^{-d/b}}, \qquad C(d) = b \ln\left(1 + e^{d/b}\right)$$
 
-A trade costs the change in $C$, so the ask and bid for an order of $s$ shares are
+A trade costs the change in \(C\), so the ask and bid for an order of \(s\) shares are
 
 $$\text{ask} = \frac{C(d+s) - C(d)}{s}, \qquad \text{bid} = \frac{C(d) - C(d-s)}{s}$$
 
-The market maker can never lose more than $b \ln 2$, no matter how anyone trades.
+The market maker can never lose more than \(b \ln 2\), no matter how anyone trades.
 
 The FPGA takes 9 clock ticks, 188 ns, to produce a new quote, on every single request we measured. C++ is faster on a typical request (41 ns) but its slowest reply took 1,042 ns, about 5.5 times slower than the FPGA's. Python ranged from 2,500 ns to 14,458 ns. The board also runs a live demo. One button is a kill switch that immediately pulls both quotes out of the market, and others pause, resume and restart the stream of orders. Switches change the spread, and there is a mode where the board quotes around the live price of a real Polymarket market (read-only, no orders placed).
 
