@@ -2,13 +2,13 @@
 // exactly as the Mac will, and compare every reply byte with the golden model.
 //
 // Two copies of the design are tested one after the other:
-//   [0] fast: 8 clocks per bit, so all 6057 vectors run in reasonable time,
+//   [0] fast: 8 clocks per bit, so all 6971 vectors run in reasonable time,
 //             followed by the bad-frame and timeout cases.
 //   [1] real: 104 clocks per bit, driven at a true 115200 baud (which is not
 //             exactly 104 clocks), for the first 60 vectors.
 `timescale 1ns/1ps
 module top_tb;
-    localparam NVEC = 6057;
+    localparam NVEC = 6971;
     localparam real CLK_NS = 83.334;
     // Restart notice: status 0xC1 = notice | LB 8 | type 0 | ok, quote 49/51.
     localparam [55:0] NOTICE = {8'hC1, 8'd49, 8'd51, 16'd0, 16'd0};
@@ -35,7 +35,7 @@ module top_tb;
          .LEDR(ledr_f), .LEDG(ledg_f));
     top dut_real
         (.CLOCK_12(clk), .PICO(pico_r), .KEY(4'b1111),
-         .SW(sw),
+         .SW(18'd0),
          .HEX0(hex_r[0]), .HEX1(hex_r[1]), .HEX2(hex_r[2]), .HEX3(hex_r[3]),
          .HEX4(hex_r[4]), .HEX5(hex_r[5]), .HEX6(hex_r[6]), .HEX7(hex_r[7]),
          .LEDR(ledr_r), .LEDG(ledg_r));
@@ -155,16 +155,35 @@ module top_tb;
         send_byte(0, 8'hA5); send_byte(0, 8'h01);            // frame cut short...
         #(500 * CLK_NS);                                     // ...then a pause > TIMEOUT
         transact(0, 9005, 8'd5, 16'd0, 8'h00, 1, last);     // must resync
+        // REFERENCE 60 over the link: the 49/51 quote moves up 10 cents.
         transact(0, 9008, 8'd6, 16'd60, 8'h00, 1,
-                 {8'h4D, 8'd0, 8'd0, vec[NVEC-1][31:0]});
+                 {8'h4D, 8'd59, 8'd61, vec[NVEC-1][31:0]});
         transact(0, 9009, 8'd5, 16'd0, 8'h00, 1,
-                 {8'h4B, 8'd0, 8'd0, vec[NVEC-1][31:0]});
+                 {8'h4B, 8'd59, 8'd61, vec[NVEC-1][31:0]});
 
         // KEY0 restarts: on release the design sends a restart notice, and
         // the state is the power-on one (49/51, d=0).
         key[0] = 0; #(50 * CLK_NS); key[0] = 1;
         check_reply(0, 9006, 1, 0, NOTICE);
         transact(0, 9007, 8'd5, 16'd0, 8'h00, 1, {8'h4B, NOTICE[47:0]});
+
+        // Decimal displays after a restart: "49" "51" "0000".
+        if (hex_f[7] !== 7'b0011001 || hex_f[6] !== 7'b0010000 ||
+            hex_f[5] !== 7'b0010010 || hex_f[4] !== 7'b1111001 ||
+            hex_f[3] !== 7'b1000000 || hex_f[0] !== 7'b1000000) begin
+            $display("FAIL: displays do not read 49 51 0000"); errors[0] = errors[0] + 1;
+        end
+
+        // Switches: SW17 up with SW9-6 = 3 gives b = 64, size 1, +3c spread.
+        // The board requotes by itself and sends notice type 4 (status 0x89).
+        fork
+            begin sw[17] = 1; sw[9:6] = 4'd3; end
+            check_reply(0, 9020, 1, 0, {8'h89, 8'd46, 8'd54, 16'd0, 16'd0});
+        join
+        fork
+            begin sw = 18'd0; end                // back to the laptop's settings
+            check_reply(0, 9021, 1, 0, {8'hC9, NOTICE[47:0]});
+        join
 
         // KEY1 = kill switch: notice type 1, both sides pulled; again = back on.
         // (The notice starts a few clocks after the press, so we must already
@@ -173,6 +192,9 @@ module top_tb;
             begin key[1] = 0; #(20 * CLK_NS); key[1] = 1; end
             check_reply(0, 9010, 1, 0, {8'hD3, 8'd0, 8'd0, 16'd0, 16'd0});
         join
+        if (hex_f[7] !== 7'b0111111 || hex_f[4] !== 7'b0111111) begin
+            $display("FAIL: pulled quotes should show dashes"); errors[0] = errors[0] + 1;
+        end
         transact(0, 9011, 8'd1, 16'd8, 8'h00, 1, {8'h52, 8'd0, 8'd0, 16'd0, 16'd0});  // buy rejected
         fork
             begin key[1] = 0; #(20 * CLK_NS); key[1] = 1; end
@@ -198,11 +220,15 @@ module top_tb;
                 check_reply(0, 9016, 1, 0, {8'h43, 8'd50, 8'd52, 16'd8, 16'd1});
             end
         join
+        #(20 * CLK_NS);
+        if (hex_f[0] !== 7'b1111001) begin       // one fill -> count reads 0001
+            $display("FAIL: fill count display"); errors[0] = errors[0] + 1;
+        end
 
         for (j = 0; j < 60; j = j + 1)
             transact(1, j, vec[j][79:72], vec[j][71:56], 8'h00, 1, vec[j][55:0]);
         if (errors[0] + errors[1] != 0) $fatal(1, "%0d errors", errors[0] + errors[1]);
-        $display("PASS: fast link %0d vectors + 6 framing cases + all four buttons; 115200-baud link 60 vectors", NVEC);
+        $display("PASS: fast link %0d vectors + framing, buttons, switches, displays; 115200-baud link 60 vectors", NVEC);
         $display("      latency field: %0d clocks (fast), %0d clocks (115200) on every reply", lat[0], lat[1]);
         $finish;
     end

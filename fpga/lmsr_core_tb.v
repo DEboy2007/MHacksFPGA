@@ -2,7 +2,7 @@
 // compare all outputs bit-for-bit with golden/vectors.hex.
 `timescale 1ns/1ps
 module lmsr_core_tb;
-    localparam NVEC = 6057;
+    localparam NVEC = 6971;
 
     reg clk = 0;
     always #41.667 clk = ~clk;            // 12 MHz
@@ -23,7 +23,7 @@ module lmsr_core_tb;
                    .ask_px(ask_px), .d(d), .fills(fills), .lbm6(lbm6), .ls(ls),
                    .hs(hs), .kill(kill), .busy(busy),
                    .ui_enable(1'b0), .ui_lbm6(2'd0), .ui_ls(4'd0),
-                   .ui_hs(4'd0), .ui_kill(1'b0));
+                   .ui_hs(4'd0));
 
     // cmd[79:72] arg[71:56] status[55:48] bid[47:40] ask[39:32] d[31:16] seq[15:0]
     reg [79:0] vec [0:NVEC-1];

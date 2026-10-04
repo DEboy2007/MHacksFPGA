@@ -273,6 +273,7 @@ private:
         if (type == 1) printf("-- KEY1: kill switch %s --\n", (in[1] & 0x10) ? "ON, quotes pulled" : "off, quoting again");
         if (type == 2) paused = true;                      // KEY3
         if (type == 3) paused = false;                     // KEY2
+        if (type == 4) printf("-- switches changed: now quoting bid %d ask %d --\n", last.bid, last.ask);
         fflush(stdout);
     }
 

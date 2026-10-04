@@ -90,7 +90,7 @@ The MM handles one request at a time and answers each with a fresh quote.
 | 1 | BUY | `qty` | ask is live and `1 <= qty <= s` | `d += qty`, `fills += 1` |
 | 2 | SELL | `qty` | bid is live and `1 <= qty <= s` | `d -= qty`, `fills += 1` |
 | 3 | CONFIG | see below | `LB <= 8`, `LS <= LB`, bits 15..11 zero | sets `LB, LS, hs, kill` |
-| 4 | RESET | ignored | always | `d = 0`, `fills = 0`; config kept |
+| 4 | RESET | ignored | always | `d = 0`, `fills = 0`, reference back to 50; config kept |
 | 5 | QUERY | ignored | always | none |
 | 6 | REFERENCE | `price_cents` | `0 <= price_cents <= 100` | shifts both live quotes around the external YES reference; does not change `d` |
 
@@ -113,9 +113,12 @@ Cash/P&L is tracked by the exchange simulator, not the pricing core (it needs
 REFERENCE is the deterministic external-price input used by the live
 Polymarket adapter. The V1 value is the floor of the YES best-bid/best-ask
 midpoint after converting both prices to cents. The core computes its normal
-inventory quote, then adds `price_cents - 50` to each live side and pulls any
-result outside 1..99. This keeps the external reference separate from the
-inventory state `d`; public market trades never issue BUY or SELL requests.
+inventory quote (section 3, including the pull rules). Each side that is live
+is then moved by `price_cents - 50`, and pulled if the result is outside
+1..99. It is never clamped. The reference is 50 at power-on and after RESET,
+so replayed order streams are unaffected by an earlier live session. The
+external reference is separate from the inventory state `d`; public market
+trades never issue BUY or SELL requests.
 
 ## 5. Reachable range
 
@@ -199,7 +202,7 @@ Report median, p99, p99.9 and max, plus a histogram.
 
 ## 9. Test vectors
 
-`golden/gen_vectors.py` (seed 270) writes 6,057 request/reply pairs covering
+`golden/gen_vectors.py` (seed 270) writes 6,971 request/reply pairs covering
 every `b` preset, balanced and trending flow that runs into the price limits,
 bad sizes, kill, invalid configs, and shrinking `b` under a large position.
 
@@ -216,14 +219,16 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
 - The FPGA UART is `/dev/cu.usbmodem2103`. The RP2040 bridge drops bytes when
   more than about 32 are in flight in both directions at once; the
   one-request-then-one-reply rule in section 6 stays far below that.
-- KEY0 restarts the market maker while held: `d = 0`, `fills = 0` and the
-  power-on config, exactly as after loading the bitstream. No reply is sent.
-- M6 board UI: SW17 enables local overrides. SW1:0 selects `LB` as 6, 7 or 8
-  (`b=64,128,256`), SW5:2 selects `LS` and is clamped to `LB`, and SW9:6
-  selects `hs` in cents. KEY3 is active-low and immediately pulls both quotes.
-  With SW17 low, host CONFIG messages retain full control. LEDY indicates
-  UI-enable, kill, core-busy and UART receive activity.
-- Build (with buttons): 1,546 logic cells, estimated maximum clock 49.3 MHz.
+- **Switches:** with SW17 up, the switches replace the host's config: SW1:0
+  selects `LB` as 6, 7 or 8 (`b` = 64, 128, 256), SW5:2 selects `LS` (clamped
+  to `LB`), and SW9:6 selects `hs` in cents. With SW17 down, host CONFIG
+  messages have full control. The switches have no kill function.
+- LEDY3..0 show: switches enabled (SW17), kill, core busy, byte received.
+- Build (buttons, switches, decimal displays): 2,010 logic cells, estimated
+  maximum clock 46.0 MHz.
+- **Displays** are decimal: HEX7-6 bid, HEX5-4 ask (`--` when pulled), HEX3-0
+  accepted fills, wrapping from 9999 to 0000. `make demo` streams 9,999 orders
+  so the count never wraps during a demo.
 - **Buttons** (FPGA only):
 
   | Button | Effect on the board | Notice type |
@@ -232,6 +237,7 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
   | KEY1 | kill switch on/off (same `kill` bit CONFIG sets); LEDR0 shows it | 1 |
   | KEY3 | asks the laptop to pause the order feed; LEDG1 lights | 2 |
   | KEY2 | asks the laptop to resume; LEDG1 goes out | 3 |
+  | any of SW17, SW9..0 moved | the quote is recomputed with the new settings | 4 |
 
 - **Notices:** each button press makes the board send one reply-format frame
   unasked: status bit 7 = 1, the notice type in the `cmd` bits, bit 0 = 1, and

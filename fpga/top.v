@@ -2,11 +2,14 @@
 //
 //   PICO[0] --> uart_rx --> frame_rx --> lmsr_core --> frame_tx --> uart_tx --> PICO[1]
 //
-// HEX7-6: bid, HEX5-4: ask (hex for now, 00 = pulled), HEX3-0: accepted fills.
+// HEX7-6: bid, HEX5-4: ask, in cents ("--" = pulled). HEX3-0: accepted fills.
+// All in decimal; the fill count wraps from 9999 to 0000.
 // LEDR[0]: kill switch active. LEDG[0]: reply being sent. LEDG[1]: feed paused.
 //
 // KEY0: restart (same as power-on: d = 0, fills = 0, default config).
 // KEY1: kill switch on/off.   KEY3: pause the order feed.   KEY2: resume it.
+// SW17 up: SW1-0 pick b (64/128/256), SW5-2 the quote size, SW9-6 the extra
+// spread, overriding the laptop's settings. SW17 down: the laptop decides.
 // Every button press makes the board send a "notice" to the laptop, so the
 // program feeding it orders (exchange --demo) can restart, pause or resume.
 module top #(
@@ -41,6 +44,23 @@ module top #(
     // KEY0 restarts everything while held.
     wire rst = por_rst | key_s2[0];
 
+    // The switches get the same treatment. Only SW17 and SW9-0 are used.
+    // When any of them moves, the quote has to be worked out again with the
+    // new settings (sw_moved, below).
+    wire [10:0] sw_used = {SW[17], SW[9:0]};
+    reg  [10:0] sw_s1 = 0, sw_s2 = 0, sw_s3 = 0;
+    always @(posedge clk) begin
+        sw_s1 <= sw_used;
+        sw_s2 <= sw_s1;
+        sw_s3 <= sw_s2;
+    end
+    wire       sw_moved  = (sw_s2 != sw_s3);
+    wire       ui_enable = sw_s2[10];
+    wire [1:0] ui_lbm6   = (sw_s2[1:0] == 2'd3) ? 2'd2 : sw_s2[1:0];   // b = 64, 128, 256
+    wire [3:0] ui_lb     = {2'b00, ui_lbm6} + 4'd6;
+    wire [3:0] ui_ls     = (sw_s2[5:2] > ui_lb) ? ui_lb : sw_s2[5:2];  // size cannot exceed b
+    wire [3:0] ui_hs     = sw_s2[9:6];
+
     // ---- bytes in -> request ----
     wire [7:0] rx_data;
     wire       rx_valid;
@@ -62,10 +82,6 @@ module top #(
     wire [31:0] fills;
     wire [1:0]  lbm6;
     wire [3:0]  ls, hs;
-    wire ui_kill = SW[17] & ~KEY[3];
-    wire [6:0] ui_bid_px = ui_kill ? 7'd0 : bid_px;
-    wire [6:0] ui_ask_px = ui_kill ? 7'd0 : ask_px;
-    wire [7:0] ui_status = status | (ui_kill ? 8'h10 : 8'h00);
     // ---- who gets the core next ----
     // Normally a request goes straight in. But the core handles one thing at
     // a time and there is one serial line out, so a button event must wait
@@ -73,7 +89,7 @@ module top #(
     // a request that arrives while a notice is going out waits its turn in
     // the pend_* registers. The host only ever has one request outstanding,
     // so one waiting slot is enough.
-    reg         pend_req, pend_kill, pend_pause, pend_resume, paused;
+    reg         pend_req, pend_kill, pend_pause, pend_resume, pend_requote, paused;
     reg  [7:0]  pend_cmd;
     reg  [15:0] pend_arg;
     wire        ftx_busy;
@@ -97,13 +113,15 @@ module top #(
                 core_req = 1'b1; core_cmd = 8'h82;
             end else if (pend_resume) begin
                 core_req = 1'b1; core_cmd = 8'h83;
+            end else if (pend_requote) begin
+                core_req = 1'b1; core_cmd = 8'h84;
             end
         end
     end
 
     always @(posedge clk) begin
         if (rst) begin
-            {pend_req, pend_kill, pend_pause, pend_resume, paused} <= 5'd0;
+            {pend_req, pend_kill, pend_pause, pend_resume, pend_requote, paused} <= 6'd0;
         end else begin
             // whatever was just handed to the core is no longer waiting
             if (can_start) begin
@@ -112,6 +130,7 @@ module top #(
                 else if (pend_kill)   pend_kill   <= 1'b0;
                 else if (pend_pause)  pend_pause  <= 1'b0;
                 else if (pend_resume) pend_resume <= 1'b0;
+                else if (pend_requote) pend_requote <= 1'b0;
             end
             // new arrivals (these win if both happen on the same clock)
             if (req_valid && !(can_start && !pend_req)) begin
@@ -122,6 +141,7 @@ module top #(
             if (key_press[1]) pend_kill <= 1'b1;
             if (key_press[3]) begin pend_pause  <= 1'b1; paused <= 1'b1; end
             if (key_press[2]) begin pend_resume <= 1'b1; paused <= 1'b0; end
+            if (sw_moved) pend_requote <= 1'b1;
         end
     end
 
@@ -130,14 +150,7 @@ module top #(
          .resp_valid(resp_valid), .status(status), .bid_px(bid_px), .ask_px(ask_px),
          .d(d), .fills(fills), .lbm6(lbm6), .ls(ls), .hs(hs), .kill(kill),
          .busy(core_busy),
-         .ui_enable(SW[17]),
-         .ui_lbm6(SW[1:0] == 2'd0 ? 2'd0 :
-                  SW[1:0] == 2'd1 ? 2'd1 : 2'd2),
-         .ui_ls(SW[5:2] > (SW[1:0] == 2'd0 ? 4'd6 :
-                           SW[1:0] == 2'd1 ? 4'd7 : 4'd8)
-                ? (SW[1:0] == 2'd0 ? 4'd6 :
-                   SW[1:0] == 2'd1 ? 4'd7 : 4'd8) : SW[5:2]),
-         .ui_hs(SW[9:6]), .ui_kill(ui_kill));
+         .ui_enable(ui_enable), .ui_lbm6(ui_lbm6), .ui_ls(ui_ls), .ui_hs(ui_hs));
 
     // ---- compute latency (spec section 8) ----
     // Clocks from uart_rx delivering the request's last byte to the reply
@@ -153,8 +166,8 @@ module top #(
     wire [7:0] tx_data;
     wire       tx_start, tx_busy, tx;
     frame_tx ftx_i
-        (.clk(clk), .rst(rst),         .send(resp_valid), .status(ui_status),
-        .bid_px({1'b0, ui_bid_px}), .ask_px({1'b0, ui_ask_px}), .d(d),
+        (.clk(clk), .rst(rst), .send(resp_valid), .status(status),
+         .bid_px({1'b0, bid_px}), .ask_px({1'b0, ask_px}), .d(d),
          .seq(fills[15:0]), .latency(lat),
          .tx_data(tx_data), .tx_start(tx_start), .tx_busy(tx_busy), .busy(ftx_busy));
     uart_tx #(.CLKS_PER_BIT(CLKS_PER_BIT)) tx_i
@@ -162,15 +175,49 @@ module top #(
     assign PICO[1] = tx;
 
     // ---- board display ----
-    hex7seg h7 (.value({1'b0, ui_bid_px[6:4]}), .blank(1'b0), .seg(HEX7));
-    hex7seg h6 (.value(ui_bid_px[3:0]),          .blank(1'b0), .seg(HEX6));
-    hex7seg h5 (.value({1'b0, ui_ask_px[6:4]}), .blank(1'b0), .seg(HEX5));
-    hex7seg h4 (.value(ui_ask_px[3:0]),          .blank(1'b0), .seg(HEX4));
-    hex7seg h3 (.value(fills[15:12]),        .blank(1'b0), .seg(HEX3));
-    hex7seg h2 (.value(fills[11:8]),         .blank(1'b0), .seg(HEX2));
-    hex7seg h1 (.value(fills[7:4]),          .blank(1'b0), .seg(HEX1));
-    hex7seg h0 (.value(fills[3:0]),          .blank(1'b0), .seg(HEX0));
-    assign LEDR = {6'd0, kill | ui_kill};
-    assign LEDY = {SW[17], ~KEY[3], core_busy, rx_valid};
+    // Prices: 0-99 split into two decimal digits; a pulled side shows "--".
+    wire [3:0] bid_tens, bid_ones, ask_tens, ask_ones;
+    bin2dec2 bid_dec (.value(bid_px), .tens(bid_tens), .ones(bid_ones));
+    bin2dec2 ask_dec (.value(ask_px), .tens(ask_tens), .ones(ask_ones));
+    wire bid_pulled = (bid_px == 7'd0);
+    wire ask_pulled = (ask_px == 7'd0);
+
+    // Fill count in decimal. Converting a big binary number to decimal needs
+    // division, so we keep a second counter that counts in decimal directly:
+    // four digits, each rolling 9 -> 0 and carrying into the next. It steps
+    // whenever the core's own fill count changes, and clears when that is 0.
+    reg [15:0] fills_dec;        // four digits, 4 bits each
+    reg [31:0] fills_prev;
+    always @(posedge clk) begin
+        fills_prev <= fills;
+        if (rst || fills == 32'd0) begin
+            fills_dec <= 16'd0;
+        end else if (fills != fills_prev) begin
+            if (fills_dec[3:0] != 4'd9) fills_dec[3:0] <= fills_dec[3:0] + 1;
+            else begin
+                fills_dec[3:0] <= 4'd0;
+                if (fills_dec[7:4] != 4'd9) fills_dec[7:4] <= fills_dec[7:4] + 1;
+                else begin
+                    fills_dec[7:4] <= 4'd0;
+                    if (fills_dec[11:8] != 4'd9) fills_dec[11:8] <= fills_dec[11:8] + 1;
+                    else begin
+                        fills_dec[11:8] <= 4'd0;
+                        fills_dec[15:12] <= (fills_dec[15:12] == 4'd9) ? 4'd0 : fills_dec[15:12] + 1;
+                    end
+                end
+            end
+        end
+    end
+
+    dec7seg h7 (.digit(bid_tens),         .dash(bid_pulled), .seg(HEX7));
+    dec7seg h6 (.digit(bid_ones),         .dash(bid_pulled), .seg(HEX6));
+    dec7seg h5 (.digit(ask_tens),         .dash(ask_pulled), .seg(HEX5));
+    dec7seg h4 (.digit(ask_ones),         .dash(ask_pulled), .seg(HEX4));
+    dec7seg h3 (.digit(fills_dec[15:12]), .dash(1'b0),       .seg(HEX3));
+    dec7seg h2 (.digit(fills_dec[11:8]),  .dash(1'b0),       .seg(HEX2));
+    dec7seg h1 (.digit(fills_dec[7:4]),   .dash(1'b0),       .seg(HEX1));
+    dec7seg h0 (.digit(fills_dec[3:0]),   .dash(1'b0),       .seg(HEX0));
+    assign LEDR = {6'd0, kill};
+    assign LEDY = {ui_enable, kill, core_busy, rx_valid};   // switches on, kill, busy, byte in
     assign LEDG = {2'd0, paused, ftx_busy};
 endmodule

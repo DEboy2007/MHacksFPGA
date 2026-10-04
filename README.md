@@ -23,13 +23,17 @@ All three produce identical quotes for the same order stream.
     exchange/exchange --source 'cmd:python3 tools/polymarket_paper.py --exchange-source' --mm cmd:mm_cpp/mm_cpp
     cd fpga && apio upload    # build and flash the market maker
     python3 tools/replay.py   # golden vectors against the board (--cmd mm_cpp/mm_cpp for software)
-    make demo                 # then press KEY0: replays a fixed order stream you can watch (RATE=10 trades/s)
+    make demo                 # then press KEY0: replays a fixed 9999-order stream (RATE=200 orders/s; lower it to watch single trades)
 
-The FPGA's serial port is `/dev/cu.usbmodem2103`. KEY0 on the board restarts the market maker.
-For M6, raise SW17 to enable local controls: SW1:0 selects b=64/128/256,
-SW5:2 selects quote-size exponent (clamped to LB), and SW9:6 selects the
-extra half-spread in cents. KEY3 is an immediate kill switch; LEDY shows UI,
-kill, core-busy and UART activity. Lower SW17 to return to host CONFIG control.
+The FPGA's serial port is `/dev/cu.usbmodem2103`.
+
+Board switches: raise SW17 to let the switches override the laptop's settings.
+SW1:0 selects b=64/128/256, SW5:2 selects the quote-size exponent (clamped to
+LB), and SW9:6 selects the extra half-spread in cents. Lower SW17 to return to
+host CONFIG control. Moving a switch updates the quote immediately. LEDY shows
+switches-enabled, kill, core-busy and UART activity.
+
+The displays are decimal: bid, ask (`--` when pulled), then the fill count.
 
 The Polymarket command discovers the highest-24-hour-volume active binary
 market with an order book, subscribes to its public market WebSocket, and

@@ -6055,3 +6055,917 @@
 3    14 -> status=47 bid=99 ask= 0 d= 1238 seq=630
 2     8 -> status=45 bid=99 ask= 0 d= 1230 seq=631
 1     8 -> status=42 bid=99 ask= 0 d= 1230 seq=631
+4     0 -> status=49 bid=49 ask=51 d=    0 seq=0
+3    14 -> status=47 bid=49 ask=51 d=    0 seq=0
+2     7 -> status=45 bid=48 ask=50 d=   -7 seq=1
+6    10 -> status=4d bid= 8 ask=10 d=   -7 seq=1
+2     7 -> status=45 bid= 8 ask=10 d=  -14 seq=2
+1     6 -> status=43 bid= 8 ask=10 d=   -8 seq=3
+1     2 -> status=43 bid= 9 ask=10 d=   -6 seq=4
+1     3 -> status=43 bid= 9 ask=11 d=   -3 seq=5
+1     7 -> status=43 bid=10 ask=11 d=    4 seq=6
+6    49 -> status=4d bid=49 ask=50 d=    4 seq=6
+1     8 -> status=43 bid=49 ask=51 d=   12 seq=7
+2     2 -> status=45 bid=49 ask=51 d=   10 seq=8
+1     7 -> status=43 bid=50 ask=52 d=   17 seq=9
+1     4 -> status=43 bid=50 ask=52 d=   21 seq=10
+1     6 -> status=43 bid=51 ask=53 d=   27 seq=11
+6     0 -> status=4d bid= 2 ask= 4 d=   27 seq=11
+6     1 -> status=4d bid= 3 ask= 5 d=   27 seq=11
+2     6 -> status=45 bid= 2 ask= 4 d=   21 seq=12
+6   100 -> status=4d bid= 0 ask= 0 d=   21 seq=12
+2     6 -> status=44 bid= 0 ask= 0 d=   21 seq=12
+1     3 -> status=42 bid= 0 ask= 0 d=   21 seq=12
+6    50 -> status=4d bid=51 ask=53 d=   21 seq=12
+1     5 -> status=43 bid=52 ask=53 d=   26 seq=13
+1     6 -> status=43 bid=52 ask=54 d=   32 seq=14
+2     2 -> status=45 bid=52 ask=54 d=   30 seq=15
+2     4 -> status=45 bid=52 ask=53 d=   26 seq=16
+1     8 -> status=43 bid=52 ask=54 d=   34 seq=17
+6    90 -> status=4d bid=92 ask=94 d=   34 seq=17
+1     2 -> status=43 bid=93 ask=94 d=   36 seq=18
+2     3 -> status=45 bid=92 ask=94 d=   33 seq=19
+2     5 -> status=45 bid=92 ask=94 d=   28 seq=20
+1     8 -> status=43 bid=93 ask=94 d=   36 seq=21
+6   101 -> status=4c bid=93 ask=94 d=   36 seq=21
+1     8 -> status=43 bid=93 ask=95 d=   44 seq=22
+2     2 -> status=45 bid=93 ask=95 d=   42 seq=23
+1     8 -> status=43 bid=94 ask=96 d=   50 seq=24
+2     3 -> status=45 bid=94 ask=95 d=   47 seq=25
+1     6 -> status=43 bid=94 ask=96 d=   53 seq=26
+1     2 -> status=43 bid=94 ask=96 d=   55 seq=27
+1     1 -> status=43 bid=95 ask=96 d=   56 seq=28
+1     2 -> status=43 bid=95 ask=97 d=   58 seq=29
+6     0 -> status=4d bid= 5 ask= 7 d=   58 seq=29
+2     6 -> status=45 bid= 4 ask= 6 d=   52 seq=30
+2     3 -> status=45 bid= 4 ask= 6 d=   49 seq=31
+6    99 -> status=4d bid= 0 ask= 0 d=   49 seq=31
+6    49 -> status=4d bid=53 ask=55 d=   49 seq=31
+1     6 -> status=43 bid=53 ask=55 d=   55 seq=32
+6   101 -> status=4c bid=53 ask=55 d=   55 seq=32
+1     1 -> status=43 bid=54 ask=55 d=   56 seq=33
+2     7 -> status=45 bid=53 ask=55 d=   49 seq=34
+6    49 -> status=4d bid=53 ask=55 d=   49 seq=34
+2     6 -> status=45 bid=52 ask=54 d=   43 seq=35
+6    10 -> status=4d bid=13 ask=15 d=   43 seq=35
+2     7 -> status=45 bid=13 ask=14 d=   36 seq=36
+6   100 -> status=4d bid= 0 ask= 0 d=   36 seq=36
+6     0 -> status=4d bid= 3 ask= 4 d=   36 seq=36
+6    51 -> status=4d bid=54 ask=55 d=   36 seq=36
+6    70 -> status=4d bid=73 ask=74 d=   36 seq=36
+1     7 -> status=43 bid=73 ask=75 d=   43 seq=37
+2     5 -> status=45 bid=73 ask=75 d=   38 seq=38
+2     2 -> status=45 bid=73 ask=74 d=   36 seq=39
+1     4 -> status=43 bid=73 ask=75 d=   40 seq=40
+2     5 -> status=45 bid=73 ask=74 d=   35 seq=41
+6   100 -> status=4d bid= 0 ask= 0 d=   35 seq=41
+2     8 -> status=44 bid= 0 ask= 0 d=   35 seq=41
+2     5 -> status=44 bid= 0 ask= 0 d=   35 seq=41
+6    90 -> status=4d bid=93 ask=94 d=   35 seq=41
+2     4 -> status=45 bid=92 ask=94 d=   31 seq=42
+1     6 -> status=43 bid=93 ask=94 d=   37 seq=43
+2     7 -> status=45 bid=92 ask=94 d=   30 seq=44
+1     6 -> status=43 bid=93 ask=94 d=   36 seq=45
+6    99 -> status=4d bid= 0 ask= 0 d=   36 seq=45
+2     1 -> status=44 bid= 0 ask= 0 d=   36 seq=45
+6    98 -> status=4d bid= 0 ask= 0 d=   36 seq=45
+2     5 -> status=44 bid= 0 ask= 0 d=   36 seq=45
+2     8 -> status=44 bid= 0 ask= 0 d=   36 seq=45
+1     8 -> status=42 bid= 0 ask= 0 d=   36 seq=45
+2     3 -> status=44 bid= 0 ask= 0 d=   36 seq=45
+6     1 -> status=4d bid= 4 ask= 5 d=   36 seq=45
+1     2 -> status=43 bid= 4 ask= 6 d=   38 seq=46
+6     2 -> status=4d bid= 5 ask= 7 d=   38 seq=46
+1     1 -> status=43 bid= 5 ask= 7 d=   39 seq=47
+2     7 -> status=45 bid= 4 ask= 6 d=   32 seq=48
+6    98 -> status=4d bid= 0 ask= 0 d=   32 seq=48
+2     5 -> status=44 bid= 0 ask= 0 d=   32 seq=48
+2     6 -> status=44 bid= 0 ask= 0 d=   32 seq=48
+2     2 -> status=44 bid= 0 ask= 0 d=   32 seq=48
+2     5 -> status=44 bid= 0 ask= 0 d=   32 seq=48
+6 65535 -> status=4c bid= 0 ask= 0 d=   32 seq=48
+1     3 -> status=42 bid= 0 ask= 0 d=   32 seq=48
+6 65535 -> status=4c bid= 0 ask= 0 d=   32 seq=48
+2     4 -> status=44 bid= 0 ask= 0 d=   32 seq=48
+2     3 -> status=44 bid= 0 ask= 0 d=   32 seq=48
+1     5 -> status=42 bid= 0 ask= 0 d=   32 seq=48
+2     7 -> status=44 bid= 0 ask= 0 d=   32 seq=48
+1     3 -> status=42 bid= 0 ask= 0 d=   32 seq=48
+6 65535 -> status=4c bid= 0 ask= 0 d=   32 seq=48
+6    70 -> status=4d bid=72 ask=74 d=   32 seq=48
+6    90 -> status=4d bid=92 ask=94 d=   32 seq=48
+2     8 -> status=45 bid=91 ask=93 d=   24 seq=49
+6   101 -> status=4c bid=91 ask=93 d=   24 seq=49
+6   101 -> status=4c bid=91 ask=93 d=   24 seq=49
+1     2 -> status=43 bid=92 ask=93 d=   26 seq=50
+2     5 -> status=45 bid=91 ask=93 d=   21 seq=51
+1     3 -> status=43 bid=91 ask=93 d=   24 seq=52
+6     0 -> status=4d bid= 1 ask= 3 d=   24 seq=52
+2     4 -> status=45 bid= 1 ask= 3 d=   20 seq=53
+6    98 -> status=4d bid=99 ask= 0 d=   20 seq=53
+1     4 -> status=42 bid=99 ask= 0 d=   20 seq=53
+2     3 -> status=45 bid=99 ask= 0 d=   17 seq=54
+6    51 -> status=4d bid=52 ask=54 d=   17 seq=54
+1     1 -> status=43 bid=52 ask=54 d=   18 seq=55
+2     2 -> status=45 bid=52 ask=53 d=   16 seq=56
+1     1 -> status=43 bid=52 ask=54 d=   17 seq=57
+6    10 -> status=4d bid=11 ask=13 d=   17 seq=57
+6    50 -> status=4d bid=51 ask=53 d=   17 seq=57
+6    98 -> status=4d bid=99 ask= 0 d=   17 seq=57
+2     7 -> status=45 bid=98 ask= 0 d=   10 seq=58
+2     7 -> status=45 bid=97 ask=99 d=    3 seq=59
+6    51 -> status=4d bid=50 ask=52 d=    3 seq=59
+6    10 -> status=4d bid= 9 ask=11 d=    3 seq=59
+1     1 -> status=43 bid=10 ask=11 d=    4 seq=60
+2     1 -> status=45 bid= 9 ask=11 d=    3 seq=61
+2     3 -> status=45 bid= 9 ask=11 d=    0 seq=62
+2     2 -> status=45 bid= 9 ask=11 d=   -2 seq=63
+2     6 -> status=45 bid= 8 ask=10 d=   -8 seq=64
+6    10 -> status=4d bid= 8 ask=10 d=   -8 seq=64
+2     6 -> status=45 bid= 8 ask=10 d=  -14 seq=65
+1     5 -> status=43 bid= 8 ask=10 d=   -9 seq=66
+1     7 -> status=43 bid= 9 ask=11 d=   -2 seq=67
+2     6 -> status=45 bid= 8 ask=10 d=   -8 seq=68
+1     6 -> status=43 bid= 9 ask=11 d=   -2 seq=69
+1     6 -> status=43 bid=10 ask=11 d=    4 seq=70
+6   101 -> status=4c bid=10 ask=11 d=    4 seq=70
+1     7 -> status=43 bid=10 ask=12 d=   11 seq=71
+2     6 -> status=45 bid=10 ask=11 d=    5 seq=72
+2     2 -> status=45 bid= 9 ask=11 d=    3 seq=73
+2     5 -> status=45 bid= 9 ask=11 d=   -2 seq=74
+2     8 -> status=45 bid= 8 ask=10 d=  -10 seq=75
+6    98 -> status=4d bid=96 ask=98 d=  -10 seq=75
+6    49 -> status=4d bid=47 ask=49 d=  -10 seq=75
+1     7 -> status=43 bid=48 ask=50 d=   -3 seq=76
+2     4 -> status=45 bid=47 ask=49 d=   -7 seq=77
+6    10 -> status=4d bid= 8 ask=10 d=   -7 seq=77
+2     8 -> status=45 bid= 8 ask= 9 d=  -15 seq=78
+1     4 -> status=43 bid= 8 ask=10 d=  -11 seq=79
+2     6 -> status=45 bid= 7 ask= 9 d=  -17 seq=80
+6     0 -> status=4d bid= 0 ask= 0 d=  -17 seq=80
+2     1 -> status=44 bid= 0 ask= 0 d=  -17 seq=80
+6     1 -> status=4d bid= 0 ask= 0 d=  -17 seq=80
+6     2 -> status=4d bid= 0 ask= 1 d=  -17 seq=80
+6   101 -> status=4c bid= 0 ask= 1 d=  -17 seq=80
+6     2 -> status=4d bid= 0 ask= 1 d=  -17 seq=80
+1     2 -> status=43 bid= 0 ask= 1 d=  -15 seq=81
+2     1 -> status=44 bid= 0 ask= 1 d=  -15 seq=81
+2     3 -> status=44 bid= 0 ask= 1 d=  -15 seq=81
+2     5 -> status=44 bid= 0 ask= 1 d=  -15 seq=81
+1     4 -> status=43 bid= 0 ask= 2 d=  -11 seq=82
+6    90 -> status=4d bid=88 ask=90 d=  -11 seq=82
+2     6 -> status=45 bid=87 ask=89 d=  -17 seq=83
+6    98 -> status=4d bid=95 ask=97 d=  -17 seq=83
+1     1 -> status=43 bid=96 ask=97 d=  -16 seq=84
+2     7 -> status=45 bid=95 ask=97 d=  -23 seq=85
+1     2 -> status=43 bid=95 ask=97 d=  -21 seq=86
+6     2 -> status=4d bid= 0 ask= 1 d=  -21 seq=86
+1     4 -> status=43 bid= 0 ask= 1 d=  -17 seq=87
+2     7 -> status=44 bid= 0 ask= 1 d=  -17 seq=87
+1     1 -> status=43 bid= 0 ask= 1 d=  -16 seq=88
+2     6 -> status=44 bid= 0 ask= 1 d=  -16 seq=88
+2     1 -> status=44 bid= 0 ask= 1 d=  -16 seq=88
+2     7 -> status=44 bid= 0 ask= 1 d=  -16 seq=88
+2     5 -> status=44 bid= 0 ask= 1 d=  -16 seq=88
+6    99 -> status=4d bid=97 ask=98 d=  -16 seq=88
+1     3 -> status=43 bid=97 ask=99 d=  -13 seq=89
+1     8 -> status=43 bid=98 ask=99 d=   -5 seq=90
+1     6 -> status=43 bid=98 ask= 0 d=    1 seq=91
+1     1 -> status=42 bid=98 ask= 0 d=    1 seq=91
+1     7 -> status=42 bid=98 ask= 0 d=    1 seq=91
+1     2 -> status=42 bid=98 ask= 0 d=    1 seq=91
+6    90 -> status=4d bid=89 ask=91 d=    1 seq=91
+2     2 -> status=45 bid=89 ask=91 d=   -1 seq=92
+6    49 -> status=4d bid=48 ask=50 d=   -1 seq=92
+6    50 -> status=4d bid=49 ask=51 d=   -1 seq=92
+6   100 -> status=4d bid=99 ask= 0 d=   -1 seq=92
+2     6 -> status=45 bid=98 ask= 0 d=   -7 seq=93
+6 65535 -> status=4c bid=98 ask= 0 d=   -7 seq=93
+2     3 -> status=45 bid=98 ask= 0 d=  -10 seq=94
+6     0 -> status=4d bid= 0 ask= 0 d=  -10 seq=94
+6   101 -> status=4c bid= 0 ask= 0 d=  -10 seq=94
+1     7 -> status=42 bid= 0 ask= 0 d=  -10 seq=94
+6    99 -> status=4d bid=97 ask=99 d=  -10 seq=94
+6    49 -> status=4d bid=47 ask=49 d=  -10 seq=94
+1     2 -> status=43 bid=47 ask=49 d=   -8 seq=95
+2     4 -> status=45 bid=47 ask=49 d=  -12 seq=96
+1     6 -> status=43 bid=48 ask=49 d=   -6 seq=97
+1     6 -> status=43 bid=48 ask=50 d=    0 seq=98
+6    10 -> status=4d bid= 9 ask=11 d=    0 seq=98
+2     2 -> status=45 bid= 9 ask=11 d=   -2 seq=99
+2     7 -> status=45 bid= 8 ask=10 d=   -9 seq=100
+6   101 -> status=4c bid= 8 ask=10 d=   -9 seq=100
+2     6 -> status=45 bid= 8 ask= 9 d=  -15 seq=101
+6 65535 -> status=4c bid= 8 ask= 9 d=  -15 seq=101
+1     4 -> status=43 bid= 8 ask=10 d=  -11 seq=102
+6 65535 -> status=4c bid= 8 ask=10 d=  -11 seq=102
+2     5 -> status=45 bid= 8 ask= 9 d=  -16 seq=103
+6    30 -> status=4d bid=28 ask=29 d=  -16 seq=103
+1     5 -> status=43 bid=28 ask=30 d=  -11 seq=104
+2     4 -> status=45 bid=28 ask=29 d=  -15 seq=105
+2     2 -> status=45 bid=27 ask=29 d=  -17 seq=106
+6     1 -> status=4d bid= 0 ask= 0 d=  -17 seq=106
+1     5 -> status=42 bid= 0 ask= 0 d=  -17 seq=106
+2     8 -> status=44 bid= 0 ask= 0 d=  -17 seq=106
+2     5 -> status=44 bid= 0 ask= 0 d=  -17 seq=106
+6    98 -> status=4d bid=95 ask=97 d=  -17 seq=106
+6    70 -> status=4d bid=67 ask=69 d=  -17 seq=106
+6    30 -> status=4d bid=27 ask=29 d=  -17 seq=106
+6   100 -> status=4d bid=97 ask=99 d=  -17 seq=106
+1     6 -> status=43 bid=98 ask= 0 d=  -11 seq=107
+2     7 -> status=45 bid=97 ask=99 d=  -18 seq=108
+2     3 -> status=45 bid=97 ask=99 d=  -21 seq=109
+2     7 -> status=45 bid=96 ask=98 d=  -28 seq=110
+2     3 -> status=45 bid=96 ask=98 d=  -31 seq=111
+6     2 -> status=4d bid= 0 ask= 0 d=  -31 seq=111
+1     8 -> status=42 bid= 0 ask= 0 d=  -31 seq=111
+1     8 -> status=42 bid= 0 ask= 0 d=  -31 seq=111
+1     2 -> status=42 bid= 0 ask= 0 d=  -31 seq=111
+2     5 -> status=44 bid= 0 ask= 0 d=  -31 seq=111
+6 65535 -> status=4c bid= 0 ask= 0 d=  -31 seq=111
+2     1 -> status=44 bid= 0 ask= 0 d=  -31 seq=111
+2     8 -> status=44 bid= 0 ask= 0 d=  -31 seq=111
+2     6 -> status=44 bid= 0 ask= 0 d=  -31 seq=111
+1     3 -> status=42 bid= 0 ask= 0 d=  -31 seq=111
+2     3 -> status=44 bid= 0 ask= 0 d=  -31 seq=111
+2     1 -> status=44 bid= 0 ask= 0 d=  -31 seq=111
+2     3 -> status=44 bid= 0 ask= 0 d=  -31 seq=111
+2     5 -> status=44 bid= 0 ask= 0 d=  -31 seq=111
+1     6 -> status=42 bid= 0 ask= 0 d=  -31 seq=111
+6    10 -> status=4d bid= 6 ask= 8 d=  -31 seq=111
+6    49 -> status=4d bid=45 ask=47 d=  -31 seq=111
+2     8 -> status=45 bid=44 ask=46 d=  -39 seq=112
+6    70 -> status=4d bid=65 ask=67 d=  -39 seq=112
+1     5 -> status=43 bid=66 ask=68 d=  -34 seq=113
+6    50 -> status=4d bid=46 ask=48 d=  -34 seq=113
+6    51 -> status=4d bid=47 ask=49 d=  -34 seq=113
+2     6 -> status=45 bid=46 ask=48 d=  -40 seq=114
+2     7 -> status=45 bid=46 ask=47 d=  -47 seq=115
+1     7 -> status=43 bid=46 ask=48 d=  -40 seq=116
+1     8 -> status=43 bid=47 ask=49 d=  -32 seq=117
+6    51 -> status=4d bid=47 ask=49 d=  -32 seq=117
+6   100 -> status=4d bid=96 ask=98 d=  -32 seq=117
+2     6 -> status=45 bid=95 ask=97 d=  -38 seq=118
+1     6 -> status=43 bid=96 ask=98 d=  -32 seq=119
+1     4 -> status=43 bid=96 ask=98 d=  -28 seq=120
+6    98 -> status=4d bid=94 ask=96 d=  -28 seq=120
+1     2 -> status=43 bid=95 ask=96 d=  -26 seq=121
+6    50 -> status=4d bid=47 ask=48 d=  -26 seq=121
+1     8 -> status=43 bid=47 ask=49 d=  -18 seq=122
+1     3 -> status=43 bid=48 ask=49 d=  -15 seq=123
+1     7 -> status=43 bid=48 ask=50 d=   -8 seq=124
+2     4 -> status=45 bid=48 ask=50 d=  -12 seq=125
+6   100 -> status=4d bid=98 ask= 0 d=  -12 seq=125
+2     1 -> status=45 bid=98 ask= 0 d=  -13 seq=126
+1     6 -> status=42 bid=98 ask= 0 d=  -13 seq=126
+2     2 -> status=45 bid=98 ask=99 d=  -15 seq=127
+1     1 -> status=43 bid=98 ask= 0 d=  -14 seq=128
+1     6 -> status=42 bid=98 ask= 0 d=  -14 seq=128
+2     7 -> status=45 bid=97 ask=99 d=  -21 seq=129
+1     1 -> status=43 bid=97 ask=99 d=  -20 seq=130
+1     6 -> status=43 bid=98 ask= 0 d=  -14 seq=131
+2     1 -> status=45 bid=98 ask=99 d=  -15 seq=132
+6   100 -> status=4d bid=98 ask=99 d=  -15 seq=132
+6 65535 -> status=4c bid=98 ask=99 d=  -15 seq=132
+6    10 -> status=4d bid= 8 ask= 9 d=  -15 seq=132
+2     6 -> status=45 bid= 7 ask= 9 d=  -21 seq=133
+6    10 -> status=4d bid= 7 ask= 9 d=  -21 seq=133
+6    70 -> status=4d bid=67 ask=69 d=  -21 seq=133
+2     4 -> status=45 bid=67 ask=68 d=  -25 seq=134
+6     2 -> status=4d bid= 0 ask= 0 d=  -25 seq=134
+6    30 -> status=4d bid=27 ask=28 d=  -25 seq=134
+6     0 -> status=4d bid= 0 ask= 0 d=  -25 seq=134
+6    49 -> status=4d bid=46 ask=47 d=  -25 seq=134
+2     1 -> status=45 bid=46 ask=47 d=  -26 seq=135
+6   101 -> status=4c bid=46 ask=47 d=  -26 seq=135
+2     3 -> status=45 bid=45 ask=47 d=  -29 seq=136
+1     4 -> status=43 bid=46 ask=47 d=  -25 seq=137
+2     1 -> status=45 bid=46 ask=47 d=  -26 seq=138
+1     6 -> status=43 bid=46 ask=48 d=  -20 seq=139
+2     8 -> status=45 bid=45 ask=47 d=  -28 seq=140
+6    50 -> status=4d bid=46 ask=48 d=  -28 seq=140
+1     8 -> status=43 bid=47 ask=49 d=  -20 seq=141
+6     1 -> status=4d bid= 0 ask= 0 d=  -20 seq=141
+2     3 -> status=44 bid= 0 ask= 0 d=  -20 seq=141
+1     5 -> status=42 bid= 0 ask= 0 d=  -20 seq=141
+1     7 -> status=42 bid= 0 ask= 0 d=  -20 seq=141
+1     6 -> status=42 bid= 0 ask= 0 d=  -20 seq=141
+6    99 -> status=4d bid=96 ask=98 d=  -20 seq=141
+6    70 -> status=4d bid=67 ask=69 d=  -20 seq=141
+1     3 -> status=43 bid=67 ask=69 d=  -17 seq=142
+1     7 -> status=43 bid=68 ask=70 d=  -10 seq=143
+6    90 -> status=4d bid=88 ask=90 d=  -10 seq=143
+1     1 -> status=43 bid=88 ask=90 d=   -9 seq=144
+1     4 -> status=43 bid=89 ask=90 d=   -5 seq=145
+6    80 -> status=4d bid=79 ask=80 d=   -5 seq=145
+4     0 -> status=49 bid=49 ask=51 d=    0 seq=0
+5     0 -> status=4b bid=49 ask=51 d=    0 seq=0
+3   136 -> status=07 bid=47 ask=53 d=    0 seq=0
+1     3 -> status=03 bid=48 ask=54 d=    3 seq=1
+2     1 -> status=05 bid=48 ask=54 d=    2 seq=2
+2     2 -> status=05 bid=47 ask=53 d=    0 seq=3
+2     2 -> status=05 bid=46 ask=52 d=   -2 seq=4
+1     3 -> status=03 bid=47 ask=54 d=    1 seq=5
+6    99 -> status=0d bid=96 ask= 0 d=    1 seq=5
+2     2 -> status=05 bid=95 ask= 0 d=   -1 seq=6
+1     4 -> status=02 bid=95 ask= 0 d=   -1 seq=6
+2     1 -> status=05 bid=95 ask= 0 d=   -2 seq=7
+6   101 -> status=0c bid=95 ask= 0 d=   -2 seq=7
+6     0 -> status=0d bid= 0 ask= 2 d=   -2 seq=7
+1     4 -> status=03 bid= 0 ask= 4 d=    2 seq=8
+2     3 -> status=04 bid= 0 ask= 4 d=    2 seq=8
+2     4 -> status=04 bid= 0 ask= 4 d=    2 seq=8
+2     1 -> status=04 bid= 0 ask= 4 d=    2 seq=8
+2     2 -> status=04 bid= 0 ask= 4 d=    2 seq=8
+6     0 -> status=0d bid= 0 ask= 4 d=    2 seq=8
+1     4 -> status=03 bid= 0 ask= 6 d=    6 seq=9
+6    70 -> status=0d bid=69 ask=76 d=    6 seq=9
+6    70 -> status=0d bid=69 ask=76 d=    6 seq=9
+1     4 -> status=03 bid=71 ask=77 d=   10 seq=10
+2     4 -> status=05 bid=69 ask=76 d=    6 seq=11
+6     1 -> status=0d bid= 0 ask= 7 d=    6 seq=11
+2     2 -> status=04 bid= 0 ask= 7 d=    6 seq=11
+2     3 -> status=04 bid= 0 ask= 7 d=    6 seq=11
+6   101 -> status=0c bid= 0 ask= 7 d=    6 seq=11
+1     4 -> status=03 bid= 2 ask= 8 d=   10 seq=12
+2     2 -> status=05 bid= 1 ask= 7 d=    8 seq=13
+1     1 -> status=03 bid= 1 ask= 8 d=    9 seq=14
+2     3 -> status=05 bid= 0 ask= 7 d=    6 seq=15
+1     2 -> status=03 bid= 1 ask= 7 d=    8 seq=16
+1     2 -> status=03 bid= 2 ask= 8 d=   10 seq=17
+6    51 -> status=0d bid=52 ask=58 d=   10 seq=17
+6    10 -> status=0d bid=11 ask=17 d=   10 seq=17
+6     0 -> status=0d bid= 1 ask= 7 d=   10 seq=17
+6    98 -> status=0d bid=99 ask= 0 d=   10 seq=17
+6 65535 -> status=0c bid=99 ask= 0 d=   10 seq=17
+1     4 -> status=02 bid=99 ask= 0 d=   10 seq=17
+1     2 -> status=02 bid=99 ask= 0 d=   10 seq=17
+1     2 -> status=02 bid=99 ask= 0 d=   10 seq=17
+6    98 -> status=0d bid=99 ask= 0 d=   10 seq=17
+2     3 -> status=05 bid=97 ask= 0 d=    7 seq=18
+1     2 -> status=02 bid=97 ask= 0 d=    7 seq=18
+1     3 -> status=02 bid=97 ask= 0 d=    7 seq=18
+6    90 -> status=0d bid=89 ask=96 d=    7 seq=18
+2     3 -> status=05 bid=88 ask=95 d=    4 seq=19
+6   100 -> status=0d bid=98 ask= 0 d=    4 seq=19
+1     2 -> status=02 bid=98 ask= 0 d=    4 seq=19
+1     4 -> status=02 bid=98 ask= 0 d=    4 seq=19
+6    51 -> status=0d bid=49 ask=56 d=    4 seq=19
+1     1 -> status=03 bid=50 ask=56 d=    5 seq=20
+1     3 -> status=03 bid=51 ask=57 d=    8 seq=21
+6    98 -> status=0d bid=98 ask= 0 d=    8 seq=21
+1     2 -> status=02 bid=98 ask= 0 d=    8 seq=21
+1     4 -> status=02 bid=98 ask= 0 d=    8 seq=21
+1     4 -> status=02 bid=98 ask= 0 d=    8 seq=21
+6    90 -> status=0d bid=90 ask=96 d=    8 seq=21
+1     1 -> status=03 bid=90 ask=97 d=    9 seq=22
+1     3 -> status=03 bid=91 ask=98 d=   12 seq=23
+6    10 -> status=0d bid=11 ask=18 d=   12 seq=23
+1     3 -> status=03 bid=13 ask=19 d=   15 seq=24
+6 65535 -> status=0c bid=13 ask=19 d=   15 seq=24
+6    49 -> status=0d bid=52 ask=58 d=   15 seq=24
+1     1 -> status=03 bid=52 ask=58 d=   16 seq=25
+6     1 -> status=0d bid= 4 ask=10 d=   16 seq=25
+1     4 -> status=03 bid= 5 ask=12 d=   20 seq=26
+2     3 -> status=05 bid= 4 ask=11 d=   17 seq=27
+2     2 -> status=05 bid= 4 ask=10 d=   15 seq=28
+6    98 -> status=0d bid= 0 ask= 0 d=   15 seq=28
+6    49 -> status=0d bid=52 ask=58 d=   15 seq=28
+1     2 -> status=03 bid=52 ask=59 d=   17 seq=29
+6    49 -> status=0d bid=52 ask=59 d=   17 seq=29
+2     4 -> status=05 bid=51 ask=57 d=   13 seq=30
+6    10 -> status=0d bid=12 ask=18 d=   13 seq=30
+2     1 -> status=05 bid=11 ask=18 d=   12 seq=31
+6     2 -> status=0d bid= 3 ask=10 d=   12 seq=31
+2     4 -> status=05 bid= 2 ask= 8 d=    8 seq=32
+1     4 -> status=03 bid= 3 ask=10 d=   12 seq=33
+1     3 -> status=03 bid= 5 ask=11 d=   15 seq=34
+6   100 -> status=0d bid= 0 ask= 0 d=   15 seq=34
+2     3 -> status=04 bid= 0 ask= 0 d=   15 seq=34
+1     2 -> status=02 bid= 0 ask= 0 d=   15 seq=34
+6     2 -> status=0d bid= 5 ask=11 d=   15 seq=34
+1     3 -> status=03 bid= 6 ask=12 d=   18 seq=35
+1     3 -> status=03 bid= 7 ask=13 d=   21 seq=36
+6    50 -> status=0d bid=55 ask=61 d=   21 seq=36
+2     4 -> status=05 bid=53 ask=60 d=   17 seq=37
+2     1 -> status=05 bid=53 ask=59 d=   16 seq=38
+6    51 -> status=0d bid=54 ask=60 d=   16 seq=38
+2     4 -> status=05 bid=52 ask=59 d=   12 seq=39
+6    49 -> status=0d bid=50 ask=57 d=   12 seq=39
+6 65535 -> status=0c bid=50 ask=57 d=   12 seq=39
+2     1 -> status=05 bid=50 ask=57 d=   11 seq=40
+1     2 -> status=03 bid=51 ask=57 d=   13 seq=41
+6   101 -> status=0c bid=51 ask=57 d=   13 seq=41
+1     3 -> status=03 bid=52 ask=58 d=   16 seq=42
+1     1 -> status=03 bid=52 ask=59 d=   17 seq=43
+6    51 -> status=0d bid=54 ask=61 d=   17 seq=43
+2     1 -> status=05 bid=54 ask=60 d=   16 seq=44
+1     1 -> status=03 bid=54 ask=61 d=   17 seq=45
+6    49 -> status=0d bid=52 ask=59 d=   17 seq=45
+6    90 -> status=0d bid=93 ask= 0 d=   17 seq=45
+1     3 -> status=02 bid=93 ask= 0 d=   17 seq=45
+6    98 -> status=0d bid= 0 ask= 0 d=   17 seq=45
+1     4 -> status=02 bid= 0 ask= 0 d=   17 seq=45
+2     4 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+1     4 -> status=02 bid= 0 ask= 0 d=   17 seq=45
+2     1 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+2     2 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+2     1 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+2     3 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+2     4 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+1     4 -> status=02 bid= 0 ask= 0 d=   17 seq=45
+2     2 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+1     2 -> status=02 bid= 0 ask= 0 d=   17 seq=45
+2     3 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+2     2 -> status=04 bid= 0 ask= 0 d=   17 seq=45
+6    90 -> status=0d bid=93 ask= 0 d=   17 seq=45
+6     1 -> status=0d bid= 4 ask=11 d=   17 seq=45
+1     3 -> status=03 bid= 5 ask=12 d=   20 seq=46
+1     2 -> status=03 bid= 6 ask=13 d=   22 seq=47
+6    50 -> status=0d bid=55 ask=62 d=   22 seq=47
+2     1 -> status=05 bid=55 ask=61 d=   21 seq=48
+6    30 -> status=0d bid=35 ask=41 d=   21 seq=48
+6    90 -> status=0d bid=95 ask= 0 d=   21 seq=48
+1     1 -> status=02 bid=95 ask= 0 d=   21 seq=48
+2     1 -> status=05 bid=94 ask= 0 d=   20 seq=49
+2     4 -> status=05 bid=93 ask=99 d=   16 seq=50
+2     4 -> status=05 bid=91 ask=98 d=   12 seq=51
+1     2 -> status=03 bid=92 ask=99 d=   14 seq=52
+2     2 -> status=05 bid=91 ask=98 d=   12 seq=53
+2     2 -> status=05 bid=91 ask=97 d=   10 seq=54
+1     4 -> status=03 bid=92 ask=99 d=   14 seq=55
+2     1 -> status=05 bid=92 ask=98 d=   13 seq=56
+1     1 -> status=03 bid=92 ask=99 d=   14 seq=57
+1     4 -> status=03 bid=94 ask= 0 d=   18 seq=58
+6    99 -> status=0d bid= 0 ask= 0 d=   18 seq=58
+6    30 -> status=0d bid=34 ask=40 d=   18 seq=58
+2     4 -> status=05 bid=32 ask=39 d=   14 seq=59
+1     1 -> status=03 bid=33 ask=39 d=   15 seq=60
+1     1 -> status=03 bid=33 ask=39 d=   16 seq=61
+6 65535 -> status=0c bid=33 ask=39 d=   16 seq=61
+2     2 -> status=05 bid=32 ask=39 d=   14 seq=62
+6    98 -> status=0d bid= 0 ask= 0 d=   14 seq=62
+6    90 -> status=0d bid=92 ask=99 d=   14 seq=62
+1     2 -> status=03 bid=93 ask=99 d=   16 seq=63
+6    30 -> status=0d bid=33 ask=39 d=   16 seq=63
+2     4 -> status=05 bid=31 ask=38 d=   12 seq=64
+6    99 -> status=0d bid= 0 ask= 0 d=   12 seq=64
+1     1 -> status=02 bid= 0 ask= 0 d=   12 seq=64
+6    90 -> status=0d bid=91 ask=98 d=   12 seq=64
+1     4 -> status=03 bid=93 ask=99 d=   16 seq=65
+2     3 -> status=05 bid=92 ask=98 d=   13 seq=66
+1     1 -> status=03 bid=92 ask=99 d=   14 seq=67
+2     3 -> status=05 bid=91 ask=98 d=   11 seq=68
+6     1 -> status=0d bid= 2 ask= 9 d=   11 seq=68
+6     2 -> status=0d bid= 3 ask=10 d=   11 seq=68
+6 65535 -> status=0c bid= 3 ask=10 d=   11 seq=68
+1     2 -> status=03 bid= 4 ask=10 d=   13 seq=69
+6     1 -> status=0d bid= 3 ask= 9 d=   13 seq=69
+2     2 -> status=05 bid= 2 ask= 9 d=   11 seq=70
+2     2 -> status=05 bid= 1 ask= 8 d=    9 seq=71
+6    90 -> status=0d bid=90 ask=97 d=    9 seq=71
+2     3 -> status=05 bid=89 ask=96 d=    6 seq=72
+1     4 -> status=03 bid=91 ask=97 d=   10 seq=73
+6   100 -> status=0d bid= 0 ask= 0 d=   10 seq=73
+6     2 -> status=0d bid= 3 ask= 9 d=   10 seq=73
+6     2 -> status=0d bid= 3 ask= 9 d=   10 seq=73
+1     1 -> status=03 bid= 3 ask=10 d=   11 seq=74
+6    30 -> status=0d bid=31 ask=38 d=   11 seq=74
+1     4 -> status=03 bid=33 ask=39 d=   15 seq=75
+6    50 -> status=0d bid=53 ask=59 d=   15 seq=75
+1     3 -> status=03 bid=54 ask=60 d=   18 seq=76
+1     4 -> status=03 bid=55 ask=62 d=   22 seq=77
+6    10 -> status=0d bid=15 ask=22 d=   22 seq=77
+2     3 -> status=05 bid=14 ask=21 d=   19 seq=78
+1     1 -> status=03 bid=14 ask=21 d=   20 seq=79
+1     2 -> status=03 bid=15 ask=22 d=   22 seq=80
+6     0 -> status=0d bid= 5 ask=12 d=   22 seq=80
+6    50 -> status=0d bid=55 ask=62 d=   22 seq=80
+1     3 -> status=03 bid=56 ask=63 d=   25 seq=81
+2     4 -> status=05 bid=55 ask=61 d=   21 seq=82
+2     1 -> status=05 bid=54 ask=61 d=   20 seq=83
+1     1 -> status=03 bid=55 ask=61 d=   21 seq=84
+6    51 -> status=0d bid=56 ask=62 d=   21 seq=84
+1     1 -> status=03 bid=56 ask=63 d=   22 seq=85
+1     1 -> status=03 bid=57 ask=63 d=   23 seq=86
+1     1 -> status=03 bid=57 ask=64 d=   24 seq=87
+6    51 -> status=0d bid=57 ask=64 d=   24 seq=87
+2     1 -> status=05 bid=57 ask=63 d=   23 seq=88
+1     3 -> status=03 bid=58 ask=64 d=   26 seq=89
+1     3 -> status=03 bid=59 ask=65 d=   29 seq=90
+1     2 -> status=03 bid=60 ask=66 d=   31 seq=91
+2     4 -> status=05 bid=58 ask=65 d=   27 seq=92
+1     3 -> status=03 bid=59 ask=66 d=   30 seq=93
+6    51 -> status=0d bid=59 ask=66 d=   30 seq=93
+1     3 -> status=03 bid=60 ask=67 d=   33 seq=94
+2     1 -> status=05 bid=60 ask=66 d=   32 seq=95
+1     1 -> status=03 bid=60 ask=67 d=   33 seq=96
+2     3 -> status=05 bid=59 ask=66 d=   30 seq=97
+1     4 -> status=03 bid=61 ask=67 d=   34 seq=98
+6     2 -> status=0d bid=12 ask=18 d=   34 seq=98
+6 65535 -> status=0c bid=12 ask=18 d=   34 seq=98
+2     3 -> status=05 bid=11 ask=17 d=   31 seq=99
+2     1 -> status=05 bid=10 ask=17 d=   30 seq=100
+1     3 -> status=03 bid=11 ask=18 d=   33 seq=101
+1     2 -> status=03 bid=12 ask=19 d=   35 seq=102
+2     1 -> status=05 bid=12 ask=18 d=   34 seq=103
+1     2 -> status=03 bid=12 ask=19 d=   36 seq=104
+1     1 -> status=03 bid=13 ask=19 d=   37 seq=105
+1     3 -> status=03 bid=14 ask=20 d=   40 seq=106
+6    98 -> status=0d bid= 0 ask= 0 d=   40 seq=106
+2     1 -> status=04 bid= 0 ask= 0 d=   40 seq=106
+1     4 -> status=02 bid= 0 ask= 0 d=   40 seq=106
+2     3 -> status=04 bid= 0 ask= 0 d=   40 seq=106
+2     3 -> status=04 bid= 0 ask= 0 d=   40 seq=106
+1     1 -> status=02 bid= 0 ask= 0 d=   40 seq=106
+1     4 -> status=02 bid= 0 ask= 0 d=   40 seq=106
+2     3 -> status=04 bid= 0 ask= 0 d=   40 seq=106
+2     1 -> status=04 bid= 0 ask= 0 d=   40 seq=106
+2     1 -> status=04 bid= 0 ask= 0 d=   40 seq=106
+2     2 -> status=04 bid= 0 ask= 0 d=   40 seq=106
+2     1 -> status=04 bid= 0 ask= 0 d=   40 seq=106
+1     3 -> status=02 bid= 0 ask= 0 d=   40 seq=106
+6    30 -> status=0d bid=42 ask=48 d=   40 seq=106
+6    50 -> status=0d bid=62 ask=68 d=   40 seq=106
+6     0 -> status=0d bid=12 ask=18 d=   40 seq=106
+6    30 -> status=0d bid=42 ask=48 d=   40 seq=106
+2     4 -> status=05 bid=40 ask=47 d=   36 seq=107
+6     2 -> status=0d bid=12 ask=19 d=   36 seq=107
+2     4 -> status=05 bid=11 ask=17 d=   32 seq=108
+1     3 -> status=03 bid=12 ask=19 d=   35 seq=109
+6    10 -> status=0d bid=20 ask=27 d=   35 seq=109
+6    10 -> status=0d bid=20 ask=27 d=   35 seq=109
+6    51 -> status=0d bid=61 ask=68 d=   35 seq=109
+1     1 -> status=03 bid=61 ask=68 d=   36 seq=110
+1     2 -> status=03 bid=62 ask=69 d=   38 seq=111
+1     4 -> status=03 bid=64 ask=70 d=   42 seq=112
+2     1 -> status=05 bid=63 ask=70 d=   41 seq=113
+1     3 -> status=03 bid=64 ask=71 d=   44 seq=114
+6    30 -> status=0d bid=43 ask=50 d=   44 seq=114
+2     4 -> status=05 bid=42 ask=48 d=   40 seq=115
+1     3 -> status=03 bid=43 ask=49 d=   43 seq=116
+2     1 -> status=05 bid=43 ask=49 d=   42 seq=117
+6    49 -> status=0d bid=62 ask=68 d=   42 seq=117
+2     1 -> status=05 bid=61 ask=68 d=   41 seq=118
+1     4 -> status=03 bid=63 ask=69 d=   45 seq=119
+1     4 -> status=03 bid=64 ask=70 d=   49 seq=120
+2     4 -> status=05 bid=63 ask=69 d=   45 seq=121
+6    51 -> status=0d bid=65 ask=71 d=   45 seq=121
+2     4 -> status=05 bid=63 ask=70 d=   41 seq=122
+2     4 -> status=05 bid=62 ask=68 d=   37 seq=123
+6   101 -> status=0c bid=62 ask=68 d=   37 seq=123
+1     2 -> status=03 bid=63 ask=69 d=   39 seq=124
+2     1 -> status=05 bid=62 ask=69 d=   38 seq=125
+2     4 -> status=05 bid=61 ask=67 d=   34 seq=126
+2     2 -> status=05 bid=60 ask=66 d=   32 seq=127
+6    70 -> status=0d bid=79 ask=85 d=   32 seq=127
+2     4 -> status=05 bid=78 ask=84 d=   28 seq=128
+2     4 -> status=05 bid=76 ask=83 d=   24 seq=129
+1     3 -> status=03 bid=77 ask=84 d=   27 seq=130
+6    30 -> status=0d bid=37 ask=44 d=   27 seq=130
+2     2 -> status=05 bid=36 ask=43 d=   25 seq=131
+6    49 -> status=0d bid=55 ask=62 d=   25 seq=131
+6     0 -> status=0d bid= 6 ask=13 d=   25 seq=131
+1     4 -> status=03 bid= 8 ask=14 d=   29 seq=132
+1     1 -> status=03 bid= 8 ask=15 d=   30 seq=133
+6    70 -> status=0d bid=78 ask=85 d=   30 seq=133
+6    98 -> status=0d bid= 0 ask= 0 d=   30 seq=133
+6   101 -> status=0c bid= 0 ask= 0 d=   30 seq=133
+6     2 -> status=0d bid=10 ask=17 d=   30 seq=133
+2     4 -> status=05 bid= 9 ask=15 d=   26 seq=134
+2     1 -> status=05 bid= 8 ask=15 d=   25 seq=135
+6    98 -> status=0d bid= 0 ask= 0 d=   25 seq=135
+6    70 -> status=0d bid=76 ask=83 d=   25 seq=135
+1     4 -> status=03 bid=78 ask=84 d=   29 seq=136
+6    50 -> status=0d bid=58 ask=64 d=   29 seq=136
+2     4 -> status=05 bid=56 ask=63 d=   25 seq=137
+6    30 -> status=0d bid=36 ask=43 d=   25 seq=137
+1     3 -> status=03 bid=38 ask=44 d=   28 seq=138
+1     1 -> status=03 bid=38 ask=44 d=   29 seq=139
+1     1 -> status=03 bid=38 ask=45 d=   30 seq=140
+6    98 -> status=0d bid= 0 ask= 0 d=   30 seq=140
+1     3 -> status=02 bid= 0 ask= 0 d=   30 seq=140
+6     1 -> status=0d bid= 9 ask=16 d=   30 seq=140
+6   101 -> status=0c bid= 9 ask=16 d=   30 seq=140
+6   100 -> status=0d bid= 0 ask= 0 d=   30 seq=140
+2     3 -> status=04 bid= 0 ask= 0 d=   30 seq=140
+2     4 -> status=04 bid= 0 ask= 0 d=   30 seq=140
+1     2 -> status=02 bid= 0 ask= 0 d=   30 seq=140
+1     1 -> status=02 bid= 0 ask= 0 d=   30 seq=140
+1     1 -> status=02 bid= 0 ask= 0 d=   30 seq=140
+1     4 -> status=02 bid= 0 ask= 0 d=   30 seq=140
+2     2 -> status=04 bid= 0 ask= 0 d=   30 seq=140
+1     2 -> status=02 bid= 0 ask= 0 d=   30 seq=140
+6    98 -> status=0d bid= 0 ask= 0 d=   30 seq=140
+2     4 -> status=04 bid= 0 ask= 0 d=   30 seq=140
+1     4 -> status=02 bid= 0 ask= 0 d=   30 seq=140
+6    90 -> status=0d bid=98 ask= 0 d=   30 seq=140
+2     1 -> status=05 bid=98 ask= 0 d=   29 seq=141
+6    80 -> status=0d bid=88 ask=94 d=   29 seq=141
+4     0 -> status=09 bid=47 ask=53 d=    0 seq=0
+5     0 -> status=0b bid=47 ask=53 d=    0 seq=0
+3    21 -> status=27 bid=46 ask=54 d=    0 seq=0
+6    90 -> status=2d bid=86 ask=94 d=    0 seq=0
+6    90 -> status=2d bid=86 ask=94 d=    0 seq=0
+1    11 -> status=23 bid=89 ask=96 d=   11 seq=1
+1    15 -> status=23 bid=91 ask=99 d=   26 seq=2
+1     5 -> status=23 bid=92 ask= 0 d=   31 seq=3
+1     6 -> status=22 bid=92 ask= 0 d=   31 seq=3
+1    10 -> status=22 bid=92 ask= 0 d=   31 seq=3
+2    24 -> status=25 bid=88 ask=95 d=    7 seq=4
+6     1 -> status=2d bid= 0 ask= 6 d=    7 seq=4
+1     6 -> status=23 bid= 0 ask= 7 d=   13 seq=5
+6     2 -> status=2d bid= 1 ask= 8 d=   13 seq=5
+2     9 -> status=25 bid= 0 ask= 6 d=    4 seq=6
+6    98 -> status=2d bid=95 ask= 0 d=    4 seq=6
+2    15 -> status=25 bid=92 ask=99 d=  -11 seq=7
+2    16 -> status=25 bid=89 ask=96 d=  -27 seq=8
+6    99 -> status=2d bid=90 ask=97 d=  -27 seq=8
+6 65535 -> status=2c bid=90 ask=97 d=  -27 seq=8
+1    15 -> status=23 bid=93 ask= 0 d=  -12 seq=9
+1     6 -> status=22 bid=93 ask= 0 d=  -12 seq=9
+1     6 -> status=22 bid=93 ask= 0 d=  -12 seq=9
+1    27 -> status=22 bid=93 ask= 0 d=  -12 seq=9
+6     0 -> status=2d bid= 0 ask= 1 d=  -12 seq=9
+6    30 -> status=2d bid=24 ask=31 d=  -12 seq=9
+2    25 -> status=25 bid=19 ask=26 d=  -37 seq=10
+1    20 -> status=23 bid=23 ask=30 d=  -17 seq=11
+1     4 -> status=23 bid=24 ask=31 d=  -13 seq=12
+1    15 -> status=23 bid=27 ask=34 d=    2 seq=13
+2     7 -> status=25 bid=25 ask=33 d=   -5 seq=14
+1    26 -> status=23 bid=30 ask=38 d=   21 seq=15
+6    99 -> status=2d bid=99 ask= 0 d=   21 seq=15
+1     8 -> status=22 bid=99 ask= 0 d=   21 seq=15
+1    30 -> status=22 bid=99 ask= 0 d=   21 seq=15
+2    14 -> status=25 bid=97 ask= 0 d=    7 seq=16
+1    29 -> status=22 bid=97 ask= 0 d=    7 seq=16
+2     3 -> status=25 bid=96 ask= 0 d=    4 seq=17
+2    30 -> status=25 bid=90 ask=98 d=  -26 seq=18
+6    51 -> status=2d bid=42 ask=50 d=  -26 seq=18
+1    21 -> status=23 bid=46 ask=54 d=   -5 seq=19
+6 65535 -> status=2c bid=46 ask=54 d=   -5 seq=19
+6     0 -> status=2d bid= 0 ask= 3 d=   -5 seq=19
+2    18 -> status=24 bid= 0 ask= 3 d=   -5 seq=19
+1     6 -> status=23 bid= 0 ask= 4 d=    1 seq=20
+1    28 -> status=23 bid= 2 ask= 9 d=   29 seq=21
+6     2 -> status=2d bid= 4 ask=11 d=   29 seq=21
+2    31 -> status=25 bid= 0 ask= 5 d=   -2 seq=22
+1    32 -> status=23 bid= 4 ask=11 d=   30 seq=23
+2    22 -> status=25 bid= 0 ask= 7 d=    8 seq=24
+6    70 -> status=2d bid=68 ask=75 d=    8 seq=24
+1    19 -> status=23 bid=72 ask=79 d=   27 seq=25
+2    17 -> status=25 bid=68 ask=76 d=   10 seq=26
+1    16 -> status=23 bid=71 ask=79 d=   26 seq=27
+2    19 -> status=25 bid=68 ask=75 d=    7 seq=28
+6   100 -> status=2d bid=98 ask= 0 d=    7 seq=28
+1    27 -> status=22 bid=98 ask= 0 d=    7 seq=28
+6   101 -> status=2c bid=98 ask= 0 d=    7 seq=28
+2     4 -> status=25 bid=97 ask= 0 d=    3 seq=29
+1     3 -> status=22 bid=97 ask= 0 d=    3 seq=29
+2    15 -> status=25 bid=94 ask= 0 d=  -12 seq=30
+1    19 -> status=22 bid=94 ask= 0 d=  -12 seq=30
+2    12 -> status=25 bid=92 ask=99 d=  -24 seq=31
+1    24 -> status=23 bid=96 ask= 0 d=    0 seq=32
+2    25 -> status=25 bid=92 ask=99 d=  -25 seq=33
+2     3 -> status=25 bid=91 ask=98 d=  -28 seq=34
+1    31 -> status=23 bid=97 ask= 0 d=    3 seq=35
+2    14 -> status=25 bid=94 ask= 0 d=  -11 seq=36
+2     9 -> status=25 bid=93 ask= 0 d=  -20 seq=37
+1    22 -> status=22 bid=93 ask= 0 d=  -20 seq=37
+2     3 -> status=25 bid=92 ask=99 d=  -23 seq=38
+1     1 -> status=23 bid=92 ask=99 d=  -22 seq=39
+1     9 -> status=23 bid=94 ask= 0 d=  -13 seq=40
+2    17 -> status=25 bid=91 ask=98 d=  -30 seq=41
+1     5 -> status=23 bid=92 ask=99 d=  -25 seq=42
+2     8 -> status=25 bid=90 ask=97 d=  -33 seq=43
+6    90 -> status=2d bid=80 ask=87 d=  -33 seq=43
+1     3 -> status=23 bid=81 ask=88 d=  -30 seq=44
+2     3 -> status=25 bid=80 ask=87 d=  -33 seq=45
+2     1 -> status=25 bid=80 ask=87 d=  -34 seq=46
+6    49 -> status=2d bid=39 ask=46 d=  -34 seq=46
+2     1 -> status=25 bid=39 ask=46 d=  -35 seq=47
+2    11 -> status=25 bid=37 ask=44 d=  -46 seq=48
+2     9 -> status=25 bid=35 ask=42 d=  -55 seq=49
+2    28 -> status=25 bid=30 ask=37 d=  -83 seq=50
+1    32 -> status=23 bid=36 ask=43 d=  -51 seq=51
+1    21 -> status=23 bid=40 ask=47 d=  -30 seq=52
+1    29 -> status=23 bid=45 ask=52 d=   -1 seq=53
+2    31 -> status=25 bid=39 ask=46 d=  -32 seq=54
+6     2 -> status=2d bid= 0 ask= 0 d=  -32 seq=54
+2     9 -> status=24 bid= 0 ask= 0 d=  -32 seq=54
+1    11 -> status=22 bid= 0 ask= 0 d=  -32 seq=54
+6    70 -> status=2d bid=60 ask=67 d=  -32 seq=54
+6    51 -> status=2d bid=41 ask=48 d=  -32 seq=54
+1    24 -> status=23 bid=46 ask=53 d=   -8 seq=55
+1     2 -> status=23 bid=46 ask=53 d=   -6 seq=56
+1    31 -> status=23 bid=52 ask=59 d=   25 seq=57
+6    70 -> status=2d bid=71 ask=78 d=   25 seq=57
+2     2 -> status=25 bid=71 ask=78 d=   23 seq=58
+6     0 -> status=2d bid= 1 ask= 8 d=   23 seq=58
+1    27 -> status=23 bid= 6 ask=13 d=   50 seq=59
+2    27 -> status=25 bid= 1 ask= 8 d=   23 seq=60
+2     2 -> status=25 bid= 0 ask= 8 d=   21 seq=61
+6    10 -> status=2d bid=10 ask=18 d=   21 seq=61
+2    27 -> status=25 bid= 5 ask=12 d=   -6 seq=62
+1    14 -> status=23 bid= 8 ask=15 d=    8 seq=63
+1     2 -> status=23 bid= 8 ask=16 d=   10 seq=64
+1     3 -> status=23 bid= 9 ask=16 d=   13 seq=65
+6     0 -> status=2d bid= 0 ask= 6 d=   13 seq=65
+2     1 -> status=24 bid= 0 ask= 6 d=   13 seq=65
+6    30 -> status=2d bid=29 ask=36 d=   13 seq=65
+6    10 -> status=2d bid= 9 ask=16 d=   13 seq=65
+6     2 -> status=2d bid= 1 ask= 8 d=   13 seq=65
+1    15 -> status=23 bid= 4 ask=11 d=   28 seq=66
+1    24 -> status=23 bid= 8 ask=15 d=   52 seq=67
+6    90 -> status=2d bid=96 ask= 0 d=   52 seq=67
+2    13 -> status=25 bid=94 ask= 0 d=   39 seq=68
+2    26 -> status=25 bid=89 ask=96 d=   13 seq=69
+1    27 -> status=23 bid=94 ask= 0 d=   40 seq=70
+1    29 -> status=22 bid=94 ask= 0 d=   40 seq=70
+6    10 -> status=2d bid=14 ask=21 d=   40 seq=70
+6 65535 -> status=2c bid=14 ask=21 d=   40 seq=70
+6   101 -> status=2c bid=14 ask=21 d=   40 seq=70
+1    12 -> status=23 bid=16 ask=23 d=   52 seq=71
+2    10 -> status=25 bid=15 ask=22 d=   42 seq=72
+2    16 -> status=25 bid=11 ask=19 d=   26 seq=73
+1     5 -> status=23 bid=12 ask=20 d=   31 seq=74
+6     0 -> status=2d bid= 2 ask=10 d=   31 seq=74
+2    22 -> status=25 bid= 0 ask= 5 d=    9 seq=75
+2     3 -> status=24 bid= 0 ask= 5 d=    9 seq=75
+2    32 -> status=24 bid= 0 ask= 5 d=    9 seq=75
+1    12 -> status=23 bid= 0 ask= 8 d=   21 seq=76
+2     6 -> status=24 bid= 0 ask= 8 d=   21 seq=76
+6    70 -> status=2d bid=70 ask=78 d=   21 seq=76
+2     3 -> status=25 bid=70 ask=77 d=   18 seq=77
+1    27 -> status=23 bid=75 ask=82 d=   45 seq=78
+1    27 -> status=23 bid=80 ask=87 d=   72 seq=79
+1     3 -> status=23 bid=81 ask=88 d=   75 seq=80
+6    99 -> status=2d bid= 0 ask= 0 d=   75 seq=80
+6    50 -> status=2d bid=61 ask=68 d=   75 seq=80
+6    10 -> status=2d bid=21 ask=28 d=   75 seq=80
+1    19 -> status=23 bid=24 ask=31 d=   94 seq=81
+2     3 -> status=25 bid=24 ask=30 d=   91 seq=82
+2     8 -> status=25 bid=22 ask=29 d=   83 seq=83
+6    70 -> status=2d bid=82 ask=89 d=   83 seq=83
+6     0 -> status=2d bid=12 ask=19 d=   83 seq=83
+2    13 -> status=25 bid=10 ask=17 d=   70 seq=84
+1     6 -> status=23 bid=11 ask=18 d=   76 seq=85
+1    20 -> status=23 bid=15 ask=21 d=   96 seq=86
+6    99 -> status=2d bid= 0 ask= 0 d=   96 seq=86
+6    50 -> status=2d bid=65 ask=71 d=   96 seq=86
+1    23 -> status=23 bid=69 ask=75 d=  119 seq=87
+2    31 -> status=25 bid=63 ask=70 d=   88 seq=88
+2    18 -> status=25 bid=60 ask=67 d=   70 seq=89
+6   101 -> status=2c bid=60 ask=67 d=   70 seq=89
+1    27 -> status=23 bid=65 ask=71 d=   97 seq=90
+2     5 -> status=25 bid=64 ask=70 d=   92 seq=91
+6    50 -> status=2d bid=64 ask=70 d=   92 seq=91
+1     3 -> status=23 bid=64 ask=71 d=   95 seq=92
+1     6 -> status=23 bid=65 ask=72 d=  101 seq=93
+1    17 -> status=23 bid=68 ask=74 d=  118 seq=94
+2     6 -> status=25 bid=67 ask=74 d=  112 seq=95
+1    10 -> status=23 bid=69 ask=75 d=  122 seq=96
+2     9 -> status=25 bid=68 ask=74 d=  113 seq=97
+6    50 -> status=2d bid=68 ask=74 d=  113 seq=97
+1    12 -> status=23 bid=70 ask=76 d=  125 seq=98
+2    20 -> status=25 bid=66 ask=72 d=  105 seq=99
+2    21 -> status=25 bid=62 ask=69 d=   84 seq=100
+1    22 -> status=23 bid=66 ask=73 d=  106 seq=101
+1    29 -> status=23 bid=71 ask=77 d=  135 seq=102
+6 65535 -> status=2c bid=71 ask=77 d=  135 seq=102
+1     1 -> status=23 bid=71 ask=77 d=  136 seq=103
+2    30 -> status=25 bid=66 ask=73 d=  106 seq=104
+2    20 -> status=25 bid=63 ask=69 d=   86 seq=105
+1    30 -> status=23 bid=68 ask=74 d=  116 seq=106
+6    99 -> status=2d bid= 0 ask= 0 d=  116 seq=106
+1     3 -> status=22 bid= 0 ask= 0 d=  116 seq=106
+6    10 -> status=2d bid=28 ask=34 d=  116 seq=106
+2    14 -> status=25 bid=26 ask=32 d=  102 seq=107
+2     4 -> status=25 bid=25 ask=31 d=   98 seq=108
+1    16 -> status=23 bid=28 ask=34 d=  114 seq=109
+2     8 -> status=25 bid=26 ask=33 d=  106 seq=110
+2    17 -> status=25 bid=23 ask=30 d=   89 seq=111
+1    25 -> status=23 bid=28 ask=34 d=  114 seq=112
+6    99 -> status=2d bid= 0 ask= 0 d=  114 seq=112
+6   101 -> status=2c bid= 0 ask= 0 d=  114 seq=112
+6    30 -> status=2d bid=48 ask=54 d=  114 seq=112
+2    17 -> status=25 bid=45 ask=51 d=   97 seq=113
+2    27 -> status=25 bid=40 ask=47 d=   70 seq=114
+1    29 -> status=23 bid=45 ask=52 d=   99 seq=115
+1    12 -> status=23 bid=47 ask=53 d=  111 seq=116
+6   100 -> status=2d bid= 0 ask= 0 d=  111 seq=116
+2    25 -> status=24 bid= 0 ask= 0 d=  111 seq=116
+6 65535 -> status=2c bid= 0 ask= 0 d=  111 seq=116
+1    11 -> status=22 bid= 0 ask= 0 d=  111 seq=116
+1    28 -> status=22 bid= 0 ask= 0 d=  111 seq=116
+6    70 -> status=2d bid=87 ask=93 d=  111 seq=116
+1    20 -> status=23 bid=91 ask=96 d=  131 seq=117
+1     6 -> status=23 bid=91 ask=97 d=  137 seq=118
+6    99 -> status=2d bid= 0 ask= 0 d=  137 seq=118
+1    15 -> status=22 bid= 0 ask= 0 d=  137 seq=118
+6     1 -> status=2d bid=22 ask=28 d=  137 seq=118
+1    17 -> status=23 bid=25 ask=31 d=  154 seq=119
+1    28 -> status=23 bid=29 ask=34 d=  182 seq=120
+2     8 -> status=25 bid=28 ask=33 d=  174 seq=121
+1    17 -> status=23 bid=30 ask=35 d=  191 seq=122
+1    29 -> status=23 bid=34 ask=38 d=  220 seq=123
+1    31 -> status=23 bid=37 ask=40 d=  251 seq=124
+1     5 -> status=23 bid=37 ask=41 d=  256 seq=125
+6    10 -> status=2d bid=46 ask=50 d=  256 seq=125
+2     7 -> status=25 bid=46 ask=49 d=  249 seq=126
+6    50 -> status=2d bid=86 ask=89 d=  249 seq=126
+6   100 -> status=2d bid= 0 ask= 0 d=  249 seq=126
+1    23 -> status=22 bid= 0 ask= 0 d=  249 seq=126
+2    22 -> status=24 bid= 0 ask= 0 d=  249 seq=126
+2    29 -> status=24 bid= 0 ask= 0 d=  249 seq=126
+6   100 -> status=2d bid= 0 ask= 0 d=  249 seq=126
+6    10 -> status=2d bid=46 ask=49 d=  249 seq=126
+2    27 -> status=25 bid=43 ask=47 d=  222 seq=127
+1    12 -> status=23 bid=44 ask=48 d=  234 seq=128
+6    10 -> status=2d bid=44 ask=48 d=  234 seq=128
+1    16 -> status=23 bid=46 ask=49 d=  250 seq=129
+6   101 -> status=2c bid=46 ask=49 d=  250 seq=129
+1    18 -> status=23 bid=47 ask=51 d=  268 seq=130
+6     2 -> status=2d bid=39 ask=43 d=  268 seq=130
+2    15 -> status=25 bid=38 ask=42 d=  253 seq=131
+2    12 -> status=25 bid=37 ask=41 d=  241 seq=132
+1    27 -> status=23 bid=39 ask=43 d=  268 seq=133
+1    15 -> status=23 bid=40 ask=44 d=  283 seq=134
+1     9 -> status=23 bid=41 ask=44 d=  292 seq=135
+1    30 -> status=23 bid=43 ask=46 d=  322 seq=136
+2     2 -> status=25 bid=43 ask=46 d=  320 seq=137
+6    51 -> status=2d bid=92 ask=95 d=  320 seq=137
+1     6 -> status=23 bid=92 ask=95 d=  326 seq=138
+1    29 -> status=23 bid=94 ask=96 d=  355 seq=139
+2    15 -> status=25 bid=93 ask=96 d=  340 seq=140
+6    51 -> status=2d bid=93 ask=96 d=  340 seq=140
+6    51 -> status=2d bid=93 ask=96 d=  340 seq=140
+2     7 -> status=25 bid=93 ask=95 d=  333 seq=141
+6    98 -> status=2d bid= 0 ask= 0 d=  333 seq=141
+6    51 -> status=2d bid=93 ask=95 d=  333 seq=141
+1     3 -> status=23 bid=93 ask=95 d=  336 seq=142
+1    18 -> status=23 bid=94 ask=96 d=  354 seq=143
+2     5 -> status=25 bid=94 ask=96 d=  349 seq=144
+1    25 -> status=23 bid=95 ask=97 d=  374 seq=145
+2    17 -> status=25 bid=94 ask=96 d=  357 seq=146
+6    50 -> status=2d bid=93 ask=95 d=  357 seq=146
+2     1 -> status=25 bid=93 ask=95 d=  356 seq=147
+6    70 -> status=2d bid= 0 ask= 0 d=  356 seq=147
+1    18 -> status=22 bid= 0 ask= 0 d=  356 seq=147
+2    26 -> status=24 bid= 0 ask= 0 d=  356 seq=147
+6    90 -> status=2d bid= 0 ask= 0 d=  356 seq=147
+1    31 -> status=22 bid= 0 ask= 0 d=  356 seq=147
+6    49 -> status=2d bid=92 ask=94 d=  356 seq=147
+1     2 -> status=23 bid=92 ask=94 d=  358 seq=148
+1    31 -> status=23 bid=93 ask=95 d=  389 seq=149
+6    90 -> status=2d bid= 0 ask= 0 d=  389 seq=149
+1     2 -> status=22 bid= 0 ask= 0 d=  389 seq=149
+2    15 -> status=24 bid= 0 ask= 0 d=  389 seq=149
+2    19 -> status=24 bid= 0 ask= 0 d=  389 seq=149
+1    30 -> status=22 bid= 0 ask= 0 d=  389 seq=149
+6    51 -> status=2d bid=95 ask=97 d=  389 seq=149
+2    21 -> status=25 bid=94 ask=97 d=  368 seq=150
+2    29 -> status=25 bid=93 ask=96 d=  339 seq=151
+6    30 -> status=2d bid=72 ask=75 d=  339 seq=151
+2    26 -> status=25 bid=71 ask=73 d=  313 seq=152
+2     4 -> status=25 bid=70 ask=73 d=  309 seq=153
+1    25 -> status=23 bid=72 ask=74 d=  334 seq=154
+2     7 -> status=25 bid=71 ask=74 d=  327 seq=155
+1    22 -> status=23 bid=73 ask=75 d=  349 seq=156
+2     3 -> status=25 bid=72 ask=75 d=  346 seq=157
+1    25 -> status=23 bid=74 ask=76 d=  371 seq=158
+2    11 -> status=25 bid=73 ask=75 d=  360 seq=159
+6     2 -> status=2d bid=45 ask=47 d=  360 seq=159
+6    50 -> status=2d bid=93 ask=95 d=  360 seq=159
+2    18 -> status=25 bid=92 ask=95 d=  342 seq=160
+6     0 -> status=2d bid=42 ask=45 d=  342 seq=160
+2     8 -> status=25 bid=42 ask=44 d=  334 seq=161
+2    25 -> status=25 bid=40 ask=43 d=  309 seq=162
+2    20 -> status=25 bid=39 ask=42 d=  289 seq=163
+2    32 -> status=25 bid=36 ask=40 d=  257 seq=164
+1    16 -> status=23 bid=38 ask=41 d=  273 seq=165
+1    25 -> status=23 bid=40 ask=43 d=  298 seq=166
+2    19 -> status=25 bid=38 ask=41 d=  279 seq=167
+1    29 -> status=23 bid=40 ask=43 d=  308 seq=168
+1    17 -> status=23 bid=41 ask=44 d=  325 seq=169
+6   101 -> status=2c bid=41 ask=44 d=  325 seq=169
+1    11 -> status=23 bid=42 ask=44 d=  336 seq=170
+2    29 -> status=25 bid=40 ask=43 d=  307 seq=171
+1    25 -> status=23 bid=42 ask=44 d=  332 seq=172
+1     5 -> status=23 bid=42 ask=45 d=  337 seq=173
+2    27 -> status=25 bid=40 ask=43 d=  310 seq=174
+1    14 -> status=23 bid=41 ask=44 d=  324 seq=175
+2    13 -> status=25 bid=40 ask=43 d=  311 seq=176
+1    15 -> status=23 bid=41 ask=44 d=  326 seq=177
+2    15 -> status=25 bid=40 ask=43 d=  311 seq=178
+2     3 -> status=25 bid=40 ask=43 d=  308 seq=179
+6    50 -> status=2d bid=90 ask=93 d=  308 seq=179
+1    23 -> status=23 bid=92 ask=94 d=  331 seq=180
+1    31 -> status=23 bid=93 ask=96 d=  362 seq=181
+6    98 -> status=2d bid= 0 ask= 0 d=  362 seq=181
+6    50 -> status=2d bid=93 ask=96 d=  362 seq=181
+6    10 -> status=2d bid=53 ask=56 d=  362 seq=181
+6    80 -> status=2d bid= 0 ask= 0 d=  362 seq=181
+4     0 -> status=29 bid=46 ask=54 d=    0 seq=0
+5     0 -> status=2b bid=46 ask=54 d=    0 seq=0
+3    14 -> status=47 bid=49 ask=51 d=    0 seq=0

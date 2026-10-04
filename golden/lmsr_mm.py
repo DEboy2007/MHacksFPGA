@@ -77,9 +77,17 @@ class LmsrMM:
             if 1 <= bid <= 99:
                 bid_px = bid
 
+        # REFERENCE: move each live side by (reference - 50) cents and pull
+        # it if that takes it outside 1..99.
         shift = self.reference - 50
-        bid_px = max(0, min(99, bid_px + shift)) if bid_px else 0
-        ask_px = max(0, min(99, ask_px + shift)) if ask_px else 0
+        if bid_px and not 1 <= bid_px + shift <= 99:
+            bid_px = 0
+        elif bid_px:
+            bid_px += shift
+        if ask_px and not 1 <= ask_px + shift <= 99:
+            ask_px = 0
+        elif ask_px:
+            ask_px += shift
         return bid_px, ask_px
 
     def handle(self, cmd, arg):
@@ -100,7 +108,7 @@ class LmsrMM:
                 self.hs, self.kill = (arg >> 6) & 15, bool((arg >> 10) & 1)
                 ok = True
         elif cmd == CMD_RESET:
-            self.d, self.fills, ok = 0, 0, True
+            self.d, self.fills, self.reference, ok = 0, 0, 50, True
         elif cmd == CMD_QUERY:
             ok = True
         elif cmd == CMD_REFERENCE:

@@ -2,7 +2,6 @@
 // FPGA core (fpga/lmsr_core.v) and the Python golden model (golden/lmsr_mm.py).
 #pragma once
 #include <cstdint>
-#include <algorithm>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -61,7 +60,7 @@ public:
             }
             break;
         }
-        case CMD_RESET: d = 0; fills = 0; ok = true; break;
+        case CMD_RESET: d = 0; fills = 0; reference = 50; ok = true; break;
         case CMD_QUERY: ok = true; break;
         case CMD_REFERENCE:
             if (arg <= 100) { reference = arg; ok = true; }
@@ -101,8 +100,11 @@ private:
             const int64_t bid = (bid_fp >> F) - hs;                  // floor, then widen
             if (bid >= 1 && bid <= 99) bid_px = static_cast<int>(bid);
         }
-        if (bid_px) bid_px = std::max(0, std::min(99, bid_px + reference - 50));
-        if (ask_px) ask_px = std::max(0, std::min(99, ask_px + reference - 50));
+        // REFERENCE: move each live side by (reference - 50) cents and pull
+        // it if that takes it outside 1..99.
+        const int shift = reference - 50;
+        if (bid_px) bid_px = (bid_px + shift >= 1 && bid_px + shift <= 99) ? bid_px + shift : 0;
+        if (ask_px) ask_px = (ask_px + shift >= 1 && ask_px + shift <= 99) ? ask_px + shift : 0;
     }
 
     std::vector<uint32_t> G;

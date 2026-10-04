@@ -9,7 +9,7 @@
 import pathlib
 import random
 from lmsr_mm import (LmsrMM, pack_config, CMD_BUY, CMD_SELL, CMD_CONFIG,
-                     CMD_RESET, CMD_QUERY)
+                     CMD_RESET, CMD_QUERY, CMD_REFERENCE)
 
 SEED = 270
 HERE = pathlib.Path(__file__).resolve().parent
@@ -47,6 +47,22 @@ def requests(rng):
         yield CMD_CONFIG, pack_config(lb, 3, 0, False)
         yield CMD_SELL, 8
         yield CMD_BUY, 8
+    # REFERENCE: shift the quotes around an external price, including shifts
+    # that push a side out of 1..99, invalid values, and RESET clearing it.
+    yield CMD_RESET, 0
+    for lb, ls, hs in ((8, 3, 0), (6, 2, 2), (7, 5, 0)):
+        yield CMD_CONFIG, pack_config(lb, ls, hs, False)
+        s = 1 << ls
+        for _ in range(300):
+            r = rng.random()
+            if r < 0.30:
+                yield CMD_REFERENCE, rng.choice((0, 1, 2, 10, 30, 49, 50, 51, 70, 90, 98, 99, 100, 101, 0xFFFF))
+            else:
+                yield (CMD_BUY if rng.random() < 0.5 else CMD_SELL), rng.randint(1, s)
+        yield CMD_REFERENCE, 80
+        yield CMD_RESET, 0                       # also puts the reference back to 50
+        yield CMD_QUERY, 0
+    yield CMD_CONFIG, pack_config(8, 3, 0, False)
 
 def main():
     rng = random.Random(SEED)
