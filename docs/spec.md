@@ -1,6 +1,6 @@
 # Fixed-point spec: binary LMSR market maker
 
-Status: **draft, awaiting review.** The FPGA, C++ and Python market makers must
+The FPGA, C++ and Python market makers must
 all follow this document exactly and produce identical integers.
 Golden model: `golden/lmsr_mm.py`. Table generator: `tools/gen_tables.py`.
 Test vectors: `golden/gen_vectors.py`. Math background: `docs/lmsr.pdf` (section 9).
@@ -168,8 +168,10 @@ Measured by `golden/test_ref.py` over every `(LB, LS, d)`:
 
 **Compute latency (primary metric)** goes in the reply's `latency` field:
 
-- **FPGA:** clock cycles from the end of the request's last stop bit to the
-  reply frame being ready to transmit. One cycle is 83.33 ns at 12 MHz.
+- **FPGA:** clock cycles from the UART receiver delivering the request's last
+  byte (it samples the middle of the stop bit) to the reply frame being ready
+  to transmit. One cycle is 83.33 ns at 12 MHz. Measured on the board: always
+  **8 cycles = 667 ns** (1 to check the frame, 7 in the quote core).
 - **C++ / Python:** nanoseconds from the last request byte being returned by
   the read call to the reply being ready, measured before the write.
   Timer: `clock_gettime_nsec_np(CLOCK_UPTIME_RAW)`; its resolution is reported
@@ -199,5 +201,10 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
 
 - The three lookups (`km`, `k0`, `kp`) come from one BRAM on consecutive
   cycles; this sets the pipeline depth and therefore the fixed cycle count.
+- Build (nextpnr, 12 MHz clock): 1,445 of 7,680 logic cells, 12 of 32 BRAMs,
+  estimated maximum clock 46.9 MHz.
+- The FPGA UART is `/dev/cu.usbmodem2103`. The RP2040 bridge drops bytes when
+  more than about 32 are in flight in both directions at once; the
+  one-request-then-one-reply rule in section 6 stays far below that.
 - On the board, switches and KEY3 will also drive config and kill (milestone
   M6). How they combine with host CONFIG messages is decided then.
