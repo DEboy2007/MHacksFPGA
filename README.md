@@ -18,6 +18,8 @@ All three produce identical quotes for the same order stream.
     fpga/run_tests.sh         # Verilog testbenches (Icarus Verilog)
     python3 bench/run.py      # M5 benchmark; writes out/bench/index.html
     open out/bench/index.html # M6 replay dashboard
+    python3 -m pip install -r requirements-polymarket.txt
+    python3 tools/polymarket_paper.py --seconds 60
     cd fpga && apio upload    # build and flash the market maker
     python3 tools/replay.py   # golden vectors against the board (--cmd mm_cpp/mm_cpp for software)
 
@@ -26,3 +28,10 @@ For M6, raise SW17 to enable local controls: SW1:0 selects b=64/128/256,
 SW5:2 selects quote-size exponent (clamped to LB), and SW9:6 selects the
 extra half-spread in cents. KEY3 is an immediate kill switch; LEDY shows UI,
 kill, core-busy and UART activity. Lower SW17 to return to host CONFIG control.
+
+The Polymarket command discovers the highest-24-hour-volume active binary
+market with an order book, subscribes to its public market WebSocket, and
+simulates local resting bid/ask orders. It starts with $100,000,000 paper cash
+by default (`--cash` changes this), and never sends authenticated orders or
+requires a wallet/private key. `--seconds` is useful for a bounded smoke test;
+without it the stream runs continuously.
