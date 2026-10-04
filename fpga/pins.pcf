@@ -1,0 +1,157 @@
+# 270-FPGA board - full pin constraints (iCE40 HX4K, TQ144)
+# Generated from the KiCad netlist (270-FPGA.kicad_pcb) - every entry
+# traced schematic net -> FPGA pad.
+#
+# Naming follows the Altera DE-series convention used in the course
+# materials (SW, KEY, HEX7..HEX0, LEDR, LEDG), so DE2-targeted projects
+# port with minimal changes. Differences from a real DE2:
+#   - CLOCK_12 instead of CLOCK_50: the clock line has a 470R series
+#     resistor (R74) whose RC corner is ~25-30 MHz, so the RP2040 feeds a
+#     clean 12 MHz. Need ~50 MHz? Multiply it with the iCE40 PLL - see
+#     pll50.v (12 -> 50.25 MHz).
+#   - LEDR is [6:0] (7 red LEDs) and LEDG is [3:0] (4 green), not [17:0]/[8:0]
+#   - no LCD/VGA/PS2 etc.; instead PICO[10:0] connects to the RP2040
+#
+# Polarity summary (matches DE2 conventions):
+#   HEXn[*]  active LOW  (common-anode; HEXn[0]=a ... HEXn[6]=g; decimal
+#            points are NOT wired - the DP nets dead-end at resistor packs)
+#   KEY[*]   active LOW  (buffered + RC debounced; 0 = pressed)
+#   LEDR/LEDG/LEDY        active HIGH
+#   SW[*]    direct SPDT to 3.3V/GND (clean CMOS levels, no debounce needed)
+#
+# HX1K DNP VARIANT: (1) the entire PICO[10:0] bus is on HX4K-only pads -
+# delete that section; (2) LEDR[0]/LEDR[1] move to pins 50 and 58.
+
+# 12 MHz from the RP2040 on GBIN5 (crystal-derived; the iCE40 HX has no
+# internal oscillator - this clock runs whenever the firmware is up).
+set_io CLOCK_12     49
+
+# Slide switches
+set_io SW[0]        52
+set_io SW[1]        56
+set_io SW[2]        60
+set_io SW[3]        61
+set_io SW[4]        62
+set_io SW[5]        7
+set_io SW[6]        134
+set_io SW[7]        93
+set_io SW[8]        28
+set_io SW[9]        29
+set_io SW[10]       12
+set_io SW[11]       11
+set_io SW[12]       136
+set_io SW[13]       135
+set_io SW[14]       129
+set_io SW[15]       128
+set_io SW[16]       122
+set_io SW[17]       121
+
+# Push buttons (active low, debounced via 74HC245 buffer)
+set_io KEY[0]       47
+set_io KEY[1]       45
+set_io KEY[2]       44
+set_io KEY[3]       43
+
+# Green LEDs (active high)
+set_io LEDG[0]      95
+set_io LEDG[1]      94
+set_io LEDG[2]      79
+set_io LEDG[3]      78
+
+# Red LEDs (active high). LEDR[0]/LEDR[1] are on variant-specific pads:
+#   HX4K: pins 82 / 55        HX1K: pins 50 / 58
+set_io LEDR         82  # HX1K variant: 50
+set_io LEDR[0]      82  # HX1K variant: 50
+set_io LEDR[1]      55  # HX1K variant: 58
+# note: LEDR[5]/LEDR[6] pads double as iCE40 CBSEL0/CBSEL1 (config-time only)
+set_io LEDR[2]      75
+set_io LEDR[3]      74
+set_io LEDR[4]      73
+set_io LEDR[5]      63
+set_io LEDR[6]      64
+
+# Yellow LEDs (active high).
+# LEDY[0]/LEDY[1] sit on the FPGA's configuration-SPI pads (SDI/SDO nets),
+# which become plain user IO once configuration finishes. They flicker with
+# SPI activity during config/DFU - that is normal. The flash (deselected)
+# and RP2040 bridge pins are Hi-Z afterwards, so the FPGA may drive them.
+# LEDY[2]/LEDY[3] are shared with RP2040 GPIO21/22 through series
+# resistors - the stock firmware leaves those RP2040 pins hi-Z.
+set_io LEDY[0]      68
+set_io LEDY[1]      67
+set_io LEDY[2]      112
+set_io LEDY[3]      117
+
+# RP2040 <-> FPGA parallel bus (HX4K ONLY - all pads absent on HX1K).
+# PICO[N] = RP2040 GPIO: 0-7 -> GPIO0-7, 8-10 -> GPIO16-18. Also on header J2.
+# PICO[0] doubles as UART RX from the RP2040 (USB CDC1 bridge, 115200),
+# PICO[1] as UART TX to the RP2040.
+set_io PICO[0]      85
+set_io PICO[1]      84
+set_io PICO[2]      83
+set_io PICO[3]      110
+set_io PICO[4]      124
+set_io PICO[5]      125
+set_io PICO[6]      130
+set_io PICO[7]      18
+set_io PICO[8]      17
+set_io PICO[9]      16
+set_io PICO[10]     15
+
+# 7-segment displays (active low, common anode)
+set_io HEX0[0]      26
+set_io HEX0[1]      48
+set_io HEX0[2]      42
+set_io HEX0[3]      41
+set_io HEX0[4]      39
+set_io HEX0[5]      38
+set_io HEX0[6]      37
+set_io HEX1[0]      34
+set_io HEX1[1]      33
+set_io HEX1[2]      32
+set_io HEX1[3]      31
+set_io HEX1[4]      25
+set_io HEX1[5]      24
+set_io HEX1[6]      23
+set_io HEX2[0]      22
+set_io HEX2[1]      21
+set_io HEX2[2]      20
+set_io HEX2[3]      19
+set_io HEX2[4]      10
+set_io HEX2[5]      9
+set_io HEX2[6]      8
+set_io HEX3[0]      4
+set_io HEX3[1]      3
+set_io HEX3[2]      2
+set_io HEX3[3]      1
+set_io HEX3[4]      144
+set_io HEX3[5]      143
+set_io HEX3[6]      142
+set_io HEX4[0]      141
+set_io HEX4[1]      139
+set_io HEX4[2]      138
+set_io HEX4[3]      137
+set_io HEX4[4]      120
+set_io HEX4[5]      119
+set_io HEX4[6]      118
+set_io HEX5[0]      116
+set_io HEX5[1]      115
+set_io HEX5[2]      114
+set_io HEX5[3]      113
+set_io HEX5[4]      107
+set_io HEX5[5]      106
+set_io HEX5[6]      105
+set_io HEX6[0]      99
+set_io HEX6[1]      104
+set_io HEX6[2]      102
+set_io HEX6[3]      101
+set_io HEX6[4]      98
+set_io HEX6[5]      97
+set_io HEX6[6]      96
+set_io HEX7[0]      91
+set_io HEX7[1]      90
+set_io HEX7[2]      88
+set_io HEX7[3]      87
+set_io HEX7[4]      81
+set_io HEX7[5]      80
+set_io HEX7[6]      76

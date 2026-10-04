@@ -1,1 +1,5 @@
 PROMPT.md
+__pycache__/
+.DS_Store
+fpga/_build/
+*.vcd

@@ -1,0 +1,35 @@
+// Custom APIO board definitions for the HailBoard board.
+// Place this file in the top-level directory of any APIO project
+// (next to apio.ini). Requires APIO 1.x.
+//
+// USB identity 1209:E270, product "HailBoard" (see firmware
+// src/usb_identity.h; pid.codes registration pending). The DFU protocol
+// is unchanged from the pico-ice, so upload works exactly like APIO's
+// stock "pico-ice" board — only the FPGA type and USB identity differ.
+{
+  "hailboard": {
+    "description": "HailBoard board (iCE40 HX4K TQ144 + RP2040)",
+    "fpga-id": "ice40hx4k-tq144-8k",
+    "programmer": {
+      "id": "dfu"
+    },
+    "usb": {
+      "vid": "1209",
+      "pid": "e270",
+      "product-regex": "^HailBoard"
+    }
+  },
+  // HX1K DNP variant of the same PCB
+  "hailboard-hx1k": {
+    "description": "HailBoard board (iCE40 HX1K TQ144 + RP2040)",
+    "fpga-id": "ice40hx1k-tq144",
+    "programmer": {
+      "id": "dfu"
+    },
+    "usb": {
+      "vid": "1209",
+      "pid": "e270",
+      "product-regex": "^HailBoard"
+    }
+  }
+}
