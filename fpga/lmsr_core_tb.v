@@ -21,7 +21,9 @@ module lmsr_core_tb;
     lmsr_core dut (.clk(clk), .rst(rst), .req_valid(req_valid), .cmd(cmd), .arg(arg),
                    .resp_valid(resp_valid), .status(status), .bid_px(bid_px),
                    .ask_px(ask_px), .d(d), .fills(fills), .lbm6(lbm6), .ls(ls),
-                   .hs(hs), .kill(kill), .busy(busy));
+                   .hs(hs), .kill(kill), .busy(busy),
+                   .ui_enable(1'b0), .ui_lbm6(2'd0), .ui_ls(4'd0),
+                   .ui_hs(4'd0), .ui_kill(1'b0));
 
     // cmd[79:72] arg[71:56] status[55:48] bid[47:40] ask[39:32] d[31:16] seq[15:0]
     reg [79:0] vec [0:NVEC-1];

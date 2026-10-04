@@ -209,8 +209,11 @@ bad sizes, kill, invalid configs, and shrinking `b` under a large position.
   one-request-then-one-reply rule in section 6 stays far below that.
 - KEY0 restarts the market maker while held: `d = 0`, `fills = 0` and the
   power-on config, exactly as after loading the bitstream. No reply is sent.
-- On the board, switches and KEY3 will also drive config and kill (milestone
-  M6). How they combine with host CONFIG messages is decided then.
+- M6 board UI: SW17 enables local overrides. SW1:0 selects `LB` as 6, 7 or 8
+  (`b=64,128,256`), SW5:2 selects `LS` and is clamped to `LB`, and SW9:6
+  selects `hs` in cents. KEY3 is active-low and immediately pulls both quotes.
+  With SW17 low, host CONFIG messages retain full control. LEDY indicates
+  UI-enable, kill, core-busy and UART receive activity.
 
 ## 11. Order-flow file
 

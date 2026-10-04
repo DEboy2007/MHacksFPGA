@@ -13,9 +13,11 @@ module top #(
     input  wire       CLOCK_12,
     inout  wire [1:0] PICO,             // PICO[0] = serial in, PICO[1] = serial out
     input  wire [3:0] KEY,              // push buttons, 0 = pressed
+    input  wire [17:0] SW,              // SW17 enables board-local controls
     output wire [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5, HEX6, HEX7,
     output wire [6:0] LEDR,
-    output wire [3:0] LEDG
+    output wire [3:0] LEDG,
+    output wire [3:0] LEDY
 );
     wire clk = CLOCK_12;
     wire por_rst;
@@ -48,11 +50,23 @@ module top #(
     wire [31:0] fills;
     wire [1:0]  lbm6;
     wire [3:0]  ls, hs;
+    wire ui_kill = SW[17] & ~KEY[3];
+    wire [6:0] ui_bid_px = ui_kill ? 7'd0 : bid_px;
+    wire [6:0] ui_ask_px = ui_kill ? 7'd0 : ask_px;
+    wire [7:0] ui_status = status | (ui_kill ? 8'h10 : 8'h00);
     lmsr_core #(.HEX_FILE(HEX_FILE)) core_i
         (.clk(clk), .rst(rst), .req_valid(req_valid), .cmd(cmd), .arg(arg),
          .resp_valid(resp_valid), .status(status), .bid_px(bid_px), .ask_px(ask_px),
          .d(d), .fills(fills), .lbm6(lbm6), .ls(ls), .hs(hs), .kill(kill),
-         .busy(core_busy));
+         .busy(core_busy),
+         .ui_enable(SW[17]),
+         .ui_lbm6(SW[1:0] == 2'd0 ? 2'd0 :
+                  SW[1:0] == 2'd1 ? 2'd1 : 2'd2),
+         .ui_ls(SW[5:2] > (SW[1:0] == 2'd0 ? 4'd6 :
+                           SW[1:0] == 2'd1 ? 4'd7 : 4'd8)
+                ? (SW[1:0] == 2'd0 ? 4'd6 :
+                   SW[1:0] == 2'd1 ? 4'd7 : 4'd8) : SW[5:2]),
+         .ui_hs(SW[9:6]), .ui_kill(ui_kill));
 
     // ---- compute latency (spec section 8) ----
     // Clocks from uart_rx delivering the request's last byte to the reply
@@ -68,8 +82,8 @@ module top #(
     wire [7:0] tx_data;
     wire       tx_start, tx_busy, ftx_busy, tx;
     frame_tx ftx_i
-        (.clk(clk), .rst(rst), .send(resp_valid), .status(status),
-         .bid_px({1'b0, bid_px}), .ask_px({1'b0, ask_px}), .d(d),
+        (.clk(clk), .rst(rst),         .send(resp_valid), .status(ui_status),
+        .bid_px({1'b0, ui_bid_px}), .ask_px({1'b0, ui_ask_px}), .d(d),
          .seq(fills[15:0]), .latency(lat),
          .tx_data(tx_data), .tx_start(tx_start), .tx_busy(tx_busy), .busy(ftx_busy));
     uart_tx #(.CLKS_PER_BIT(CLKS_PER_BIT)) tx_i
@@ -77,14 +91,15 @@ module top #(
     assign PICO[1] = tx;
 
     // ---- board display ----
-    hex7seg h7 (.value({1'b0, bid_px[6:4]}), .blank(1'b0), .seg(HEX7));
-    hex7seg h6 (.value(bid_px[3:0]),         .blank(1'b0), .seg(HEX6));
-    hex7seg h5 (.value({1'b0, ask_px[6:4]}), .blank(1'b0), .seg(HEX5));
-    hex7seg h4 (.value(ask_px[3:0]),         .blank(1'b0), .seg(HEX4));
+    hex7seg h7 (.value({1'b0, ui_bid_px[6:4]}), .blank(1'b0), .seg(HEX7));
+    hex7seg h6 (.value(ui_bid_px[3:0]),          .blank(1'b0), .seg(HEX6));
+    hex7seg h5 (.value({1'b0, ui_ask_px[6:4]}), .blank(1'b0), .seg(HEX5));
+    hex7seg h4 (.value(ui_ask_px[3:0]),          .blank(1'b0), .seg(HEX4));
     hex7seg h3 (.value(fills[15:12]),        .blank(1'b0), .seg(HEX3));
     hex7seg h2 (.value(fills[11:8]),         .blank(1'b0), .seg(HEX2));
     hex7seg h1 (.value(fills[7:4]),          .blank(1'b0), .seg(HEX1));
     hex7seg h0 (.value(fills[3:0]),          .blank(1'b0), .seg(HEX0));
-    assign LEDR = {6'd0, kill};
+    assign LEDR = {6'd0, kill | ui_kill};
     assign LEDG = {3'd0, ftx_busy};
+    assign LEDY = {SW[17], ~KEY[3], core_busy, rx_valid};
 endmodule

@@ -34,7 +34,12 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
     output reg  [3:0]  ls,           // quote size s = 1 << ls
     output reg  [3:0]  hs,           // extra half-spread, cents
     output reg         kill,
-    output wire        busy
+    output wire        busy,
+    input  wire        ui_enable,
+    input  wire [1:0]  ui_lbm6,
+    input  wire [3:0]  ui_ls,
+    input  wire [3:0]  ui_hs,
+    input  wire        ui_kill
 );
     localparam CMD_BUY = 8'd1, CMD_SELL = 8'd2, CMD_CONFIG = 8'd3,
                CMD_RESET = 8'd4, CMD_QUERY = 8'd5;
@@ -47,10 +52,14 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
     reg [2:0] cmd_r;
 
     assign busy = (state != S_IDLE);
+    wire [1:0] lbm6_eff = ui_enable ? ui_lbm6 : lbm6;
+    wire [3:0] ls_eff   = ui_enable ? ui_ls   : ls;
+    wire [3:0] hs_eff   = ui_enable ? ui_hs   : hs;
+    wire       kill_eff = kill | (ui_enable & ui_kill);
 
     // ---- table indices (plain wiring from the registers above) -------------
-    wire [16:0] s      = 17'd1 << ls;
-    wire [1:0]  kshift = 2'd2 - lbm6;                     // 8 - LB
+    wire [16:0] s      = 17'd1 << ls_eff;
+    wire [1:0]  kshift = 2'd2 - lbm6_eff;                  // 8 - LB
     wire signed [19:0] s_ext = {3'b000, s};
     wire signed [19:0] d_ext = {{4{d[15]}}, d};           // sign-extended
     wire signed [19:0] k0 =  d_ext          <<< kshift;
@@ -92,14 +101,14 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
 
     // ---- rounding (used in S_ROUND) ----------------------------------------
     // Multiply by b/s = shift left by LB - LS. In-range results fit in 23 bits.
-    wire [3:0]  up     = {2'b00, lbm6} + 4'd6 - ls;
+    wire [3:0]  up     = {2'b00, lbm6_eff} + 4'd6 - ls_eff;
     wire [34:0] ask_sh = {8'd0, ask_diff} << up;
     wire [34:0] bid_sh = {8'd0, bid_diff} << up;
     wire [24:0] ask_ceil = {1'b0, ask_sh[23:0]} + 25'd65535;       // ceil
-    wire signed [9:0] ask_c = {1'b0, ask_ceil[24:16]} + {6'd0, hs};
-    wire signed [9:0] bid_c = {2'b00, bid_sh[23:16]} - {6'd0, hs}; // floor
-    wire ask_live = !kill && ask_in && (ask_c >= 10'sd1) && (ask_c <= 10'sd99);
-    wire bid_live = !kill && bid_in && (bid_c >= 10'sd1) && (bid_c <= 10'sd99);
+    wire signed [9:0] ask_c = {1'b0, ask_ceil[24:16]} + {6'd0, hs_eff};
+    wire signed [9:0] bid_c = {2'b00, bid_sh[23:16]} - {6'd0, hs_eff}; // floor
+    wire ask_live = !kill_eff && ask_in && (ask_c >= 10'sd1) && (ask_c <= 10'sd99);
+    wire bid_live = !kill_eff && bid_in && (bid_c >= 10'sd1) && (bid_c <= 10'sd99);
 
     // ---- request checks (used in S_IDLE) -----------------------------------
     wire qty_ok = (arg != 16'd0) && ({1'b0, arg} <= s);
@@ -125,12 +134,12 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
                 cmd_r <= cmd[2:0];
                 ok_r  <= 1'b0;
                 case (cmd)
-                    CMD_BUY: if (ask_px != 0 && qty_ok) begin
+                    CMD_BUY: if (!kill_eff && ask_px != 0 && qty_ok) begin
                         d     <= d + $signed(arg);
                         fills <= fills + 1;
                         ok_r  <= 1'b1;
                     end
-                    CMD_SELL: if (bid_px != 0 && qty_ok) begin
+                    CMD_SELL: if (!kill_eff && bid_px != 0 && qty_ok) begin
                         d     <= d - $signed(arg);
                         fills <= fills + 1;
                         ok_r  <= 1'b1;
@@ -163,7 +172,7 @@ module lmsr_core #(parameter HEX_FILE = "../tables/softplus_tail.hex") (
             S_ROUND: begin
                 ask_px     <= ask_live ? ask_c[6:0] : 7'd0;
                 bid_px     <= bid_live ? bid_c[6:0] : 7'd0;
-                status     <= {1'b0, lbm6, kill, cmd_r, ok_r};
+                status     <= {1'b0, lbm6_eff, kill_eff, cmd_r, ok_r};
                 resp_valid <= !silent;
                 silent     <= 1'b0;
                 state      <= S_IDLE;
